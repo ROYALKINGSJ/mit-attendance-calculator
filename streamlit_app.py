@@ -4,7 +4,7 @@ import pandas as pd
 # --- 1. SETUP & DATA ---
 st.set_page_config(page_title="Attendance Calculator", page_icon="📅")
 
-st.title("🎓 Attendance Manager")
+st.title("🎓 Attendance Calculator")
 st.write("Calculate your current attendance and safe bunks based on your semester schedule.")
 st.write("Currently only for F section, semester 2")
 
