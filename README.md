@@ -16,5 +16,4 @@ There is only one single file to read, i.e. the main python file named streamlit
 
 Website : https://sanskarjaiswal.in/
 
-# Libraries : Streamlit, Pandas
 # Please don't do unnecessary PR ☠️
