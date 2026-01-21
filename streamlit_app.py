@@ -110,6 +110,9 @@ if st.button("Calculate Attendance", type="primary"):
     # Simple Summary
     st.caption(f"*Safe Bunks Left calculates how many more classes you can miss while staying above {SAFE_ATTENDANCE_PERCENTAGE}%.*")
 
+
+st.write("Please contribute on github if you can")
+
 st.markdown(
     "<div style='text-align: right; margin-top: 50px; color: gray;'>Made by Sanskar Jaiswal</div>",
     unsafe_allow_html=True
