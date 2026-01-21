@@ -1,13 +1,292 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>MIT Attendance Calculator</title>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIT Attendance Manager</title>
     <style>
-      body, html { height: 100%; margin: 0; padding: 0; overflow: hidden; }
-      iframe { width: 100%; height: 100%; border: none; }
+        /* --- CSS VARIABLES --- */
+        :root {
+            --primary: #4361ee;
+            --primary-hover: #3a0ca3;
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --text: #333;
+            --border: #e9ecef;
+            --input-bg: #fff;
+            --subtitle: #666;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --note-warning: #e63946;
+        }
+
+        /* Dark Mode Override */
+        body.dark-mode {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --text: #e0e0e0;
+            --border: #333;
+            --input-bg: #2d2d2d;
+            --subtitle: #aaa;
+            --shadow: rgba(0, 0, 0, 0.5);
+            --note-warning: #ff6b6b;
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; transition: background 0.3s, color 0.3s; }
+        .container { background: var(--card); width: 100%; max-width: 600px; padding: 2rem; border-radius: 16px; box-shadow: 0 10px 25px var(--shadow); position: relative; }
+        
+        /* Header & Controls */
+        .header-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        h1 { text-align: center; margin: 0 0 5px 0; font-size: 1.8rem; letter-spacing: -0.5px; }
+        .subtitle { text-align: center; color: var(--subtitle); font-size: 0.9rem; margin-bottom: 5px; }
+        
+        /* Specific Notes */
+        .section-note { text-align: center; font-size: 0.85rem; color: var(--note-warning); background: rgba(230, 57, 70, 0.1); padding: 8px; border-radius: 6px; margin-bottom: 20px; font-weight: 500; }
+        .rec-note { font-size: 0.8rem; color: var(--subtitle); margin-top: 8px; font-style: italic; }
+
+        /* Links & Buttons */
+        .repo-link { font-size: 0.8rem; color: var(--primary); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-weight: 500; }
+        .repo-link:hover { text-decoration: underline; }
+        
+        .theme-toggle { background: none; border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; cursor: pointer; color: var(--text); font-size: 0.85rem; transition: all 0.2s; }
+        .theme-toggle:hover { background: var(--border); transform: translateY(-1px); }
+
+        /* Tabs */
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+        .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; font-weight: 600; color: var(--subtitle); transition: color 0.2s; }
+        .tab.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+        
+        /* Inputs */
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem; }
+        input[type="number"] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; background: var(--input-bg); color: var(--text); font-size: 1rem; transition: border 0.2s; }
+        input[type="number"]:focus { outline: none; border-color: var(--primary); }
+        
+        /* Better Buttons */
+        .btn-calc { 
+            width: 100%; 
+            padding: 14px; 
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover)); 
+            color: white; 
+            border: none; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            font-weight: 600;
+            margin-top: 15px; 
+            transition: transform 0.1s, box-shadow 0.2s; 
+            box-shadow: 0 4px 6px rgba(67, 97, 238, 0.3);
+        }
+        .btn-calc:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(67, 97, 238, 0.4); }
+        .btn-calc:active { transform: translateY(0); }
+        
+        /* Settings Section */
+        .settings-box { background: rgba(67, 97, 238, 0.08); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid rgba(67, 97, 238, 0.2); }
+        
+        /* Results */
+        .result-box { margin-top: 25px; border-top: 1px solid var(--border); padding-top: 20px; animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { color: var(--subtitle); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .safe { color: #2a9d8f; font-weight: bold; }
+        .danger { color: #e63946; font-weight: bold; }
+        .total-col { color: var(--subtitle); font-size: 0.85rem; }
+
+        .mode-content { display: none; }
+        .mode-content.active { display: block; }
     </style>
-  </head>
-  <body>
-    <iframe src="https://mit-leave-calculator.streamlit.app/?embed=true"></iframe>
-  </body>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-controls">
+        <a href="https://github.com/ROYALKINGSJ/attendance-calculator" target="_blank" class="repo-link">
+            <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+            GitHub Repo
+        </a>
+        <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+    </div>
+
+    <h1>🎓 Attendance Manager</h1>
+    <p class="subtitle">MIT Semester Planner</p>
+    
+    <div class="section-note">
+        ⚠️ Currently this website only works for F section second semester students only
+    </div>
+
+    <div class="settings-box">
+        <label for="targetPct">Target Percentage (%)</label>
+        <input type="number" id="targetPct" value="75" min="1" max="100" step="1" onkeypress="return isNumberKey(event)">
+        <p class="rec-note">💡 We recommend at least 82% for safe assumptions.</p>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('days')">By Days Missed</div>
+        <div class="tab" onclick="switchTab('subjects')">By Subject Missed</div>
+    </div>
+
+    <div id="days" class="mode-content active">
+        <div class="input-group"><label>Mondays Missed</label><input type="number" id="mon" value="0" min="0" step="1" onkeypress="return isNumberKey(event)"></div>
+        <div class="input-group"><label>Tuesdays Missed</label><input type="number" id="tue" value="0" min="0" step="1" onkeypress="return isNumberKey(event)"></div>
+        <div class="input-group"><label>Wednesdays Missed</label><input type="number" id="wed" value="0" min="0" step="1" onkeypress="return isNumberKey(event)"></div>
+        <div class="input-group"><label>Thursdays Missed</label><input type="number" id="thu" value="0" min="0" step="1" onkeypress="return isNumberKey(event)"></div>
+        <div class="input-group"><label>Fridays Missed</label><input type="number" id="fri" value="0" min="0" step="1" onkeypress="return isNumberKey(event)"></div>
+        <button class="btn-calc" onclick="calculateByDays()">Calculate Attendance</button>
+    </div>
+
+    <div id="subjects" class="mode-content">
+        <div id="subjectInputs"></div> <button class="btn-calc" onclick="calculateBySubjects()">Calculate Attendance</button>
+    </div>
+
+    <div id="output" class="result-box" style="display:none;">
+        <h3>Results</h3>
+        <table id="resultTable">
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Total</th>
+                    <th>Att%</th>
+                    <th>Status</th>
+                    <th>Safe Bunks</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // --- CONFIGURATION ---
+    const SCHEDULE = [
+        ["EMSB", "OOPS", "CM", "ACE"],       // Mon
+        ["EVS", "CM", "EMSB", "FEE"],        // Tue
+        ["DV_LAB", "OOPS", "ACE", "FEE", "EVS"], // Wed
+        ["OOPS", "EMSB", "CM", "FEE", "OOPS_LAB"], // Thu
+        ["CAEG", "CM", "ACE", "CPI"]         // Fri
+    ];
+    const DAY_COUNTS = [15, 15, 13, 15, 12]; 
+    const ALL_SUBJECTS = ["CM", "ACE", "FEE", "OOPS", "EVS", "EMSB", "CAEG", "OOPS_LAB", "CPI", "DV_LAB"];
+
+    // 1. Calculate Total Classes per Subject
+    let totalClasses = {};
+    ALL_SUBJECTS.forEach(sub => totalClasses[sub] = 0);
+
+    SCHEDULE.forEach((dailySubjects, dayIndex) => {
+        let occurrences = DAY_COUNTS[dayIndex];
+        dailySubjects.forEach(sub => {
+            if (totalClasses[sub] !== undefined) totalClasses[sub] += occurrences;
+        });
+    });
+
+    // --- UI HELPERS ---
+    
+    function isNumberKey(evt) {
+        var charCode = (evt.which) ? evt.which : evt.keyCode;
+        if (charCode > 31 && (charCode < 48 || charCode > 57)) return false;
+        return true;
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const btn = document.querySelector('.theme-toggle');
+        if (document.body.classList.contains('dark-mode')) {
+            btn.innerHTML = "☀️ Light Mode";
+        } else {
+            btn.innerHTML = "🌙 Dark Mode";
+        }
+    }
+
+    // Generate inputs for "By Subject" mode
+    const subContainer = document.getElementById('subjectInputs');
+    ALL_SUBJECTS.forEach(sub => {
+        subContainer.innerHTML += `
+            <div class="input-group">
+                <label>${sub} Classes Skipped</label>
+                <input type="number" id="skip_${sub}" value="0" min="0" step="1" onkeypress="return isNumberKey(event)">
+            </div>`;
+    });
+
+    function switchTab(mode) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.mode-content').forEach(c => c.classList.remove('active'));
+        
+        if(mode === 'days') {
+            document.querySelectorAll('.tab')[0].classList.add('active');
+            document.getElementById('days').classList.add('active');
+        } else {
+            document.querySelectorAll('.tab')[1].classList.add('active');
+            document.getElementById('subjects').classList.add('active');
+        }
+        document.getElementById('output').style.display = 'none';
+    }
+
+    // --- CALCULATION LOGIC ---
+
+    function generateResults(leavesTaken) {
+        let tbody = document.querySelector('#resultTable tbody');
+        tbody.innerHTML = "";
+        
+        let safePctInput = parseInt(document.getElementById('targetPct').value);
+        let SAFE_PCT = isNaN(safePctInput) ? 75 : safePctInput;
+
+        ALL_SUBJECTS.forEach(sub => {
+            let total = totalClasses[sub];
+            let skipped = leavesTaken[sub] || 0;
+            let currentPct = total === 0 ? 0 : ((total - skipped) / total) * 100;
+            
+            // Safe Bunk Logic
+            let safeBunks = 0;
+            if (currentPct >= SAFE_PCT) {
+                safeBunks = Math.floor(((currentPct - SAFE_PCT) / 100) * total);
+            }
+
+            let statusClass = currentPct >= SAFE_PCT ? "safe" : "danger";
+            let statusText = currentPct >= SAFE_PCT ? "✅ Safe" : "⚠️ Low";
+
+            let row = `<tr>
+                <td><strong>${sub}</strong></td>
+                <td class="total-col">${total}</td>
+                <td>${currentPct.toFixed(1)}%</td>
+                <td class="${statusClass}">${statusText}</td>
+                <td>${safeBunks}</td>
+            </tr>`;
+            tbody.innerHTML += row;
+        });
+        document.getElementById('output').style.display = 'block';
+    }
+
+    function calculateByDays() {
+        let daysMissed = [
+            parseInt(document.getElementById('mon').value) || 0,
+            parseInt(document.getElementById('tue').value) || 0,
+            parseInt(document.getElementById('wed').value) || 0,
+            parseInt(document.getElementById('thu').value) || 0,
+            parseInt(document.getElementById('fri').value) || 0
+        ];
+
+        let leaves = {};
+        ALL_SUBJECTS.forEach(sub => leaves[sub] = 0);
+
+        daysMissed.forEach((count, dayIndex) => {
+            if (count > 0) {
+                SCHEDULE[dayIndex].forEach(sub => {
+                    leaves[sub] += count;
+                });
+            }
+        });
+
+        generateResults(leaves);
+    }
+
+    function calculateBySubjects() {
+        let leaves = {};
+        ALL_SUBJECTS.forEach(sub => {
+            leaves[sub] = parseInt(document.getElementById(`skip_${sub}`).value) || 0;
+        });
+        generateResults(leaves);
+    }
+</script>
+
+</body>
 </html>
