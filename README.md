@@ -9,7 +9,7 @@ This is a beginner's github project file
 
 
 NOTE : I made a base python code that worked on CLI, but as i don't know HTML, I used Gemini to make this website, finally converting my python logic to HTML.
-So essentially its 100 AI made.
+So essentially this website is 100 AI made.
 
 <br>
 <br>
