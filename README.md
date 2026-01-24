@@ -2,12 +2,16 @@
 
 <br>
 This is a beginner's github project file
-<br>
 
 <br>
 
+<br>
 
-All contributions are welcome
+
+NOTE : I made a base python code and works on CLI, but as i don't know HTML, I used Gemini to make this website, finally converting my python logic to HTML.
+So essentially its 100 AI made.
+
+<br>
 <br>
 
 
