@@ -119,7 +119,7 @@
 
         <div class="input-group">
             <label for="targetPct">Target Percentage (%)</label>
-            <input type="number" id="targetPct" value="75" min="1" max="100" step="1" onkeypress="return isNumberKey(event)">
+            <input type="number" id="targetPct" value="82" min="1" max="100" step="1" onkeypress="return isNumberKey(event)">
         </div>
         
         <p class="rec-note">💡 We recommend at least 82% for safe assumptions.</p>
@@ -291,7 +291,7 @@
         tbody.innerHTML = "";
         
         let safePctInput = parseInt(document.getElementById('targetPct').value);
-        let SAFE_PCT = isNaN(safePctInput) ? 75 : safePctInput;
+        let SAFE_PCT = isNaN(safePctInput) ? 82 : safePctInput;
 
         currentSubjects.forEach(sub => {
             let total = totalClasses[sub];
