@@ -111,7 +111,7 @@
             display: flex;
             align-items: center;
             gap: 4px;
-            cursor: pointer; /* Ensure pointer for buttons */
+            cursor: pointer;
         }
         .icon-btn:hover { background: var(--bg); border-color: var(--subtitle); }
         .btn-view { color: var(--primary); border-color: var(--primary); }
@@ -131,7 +131,7 @@
     </div>
 
     <h1>💻 Lab Codes</h1>
-    <p class="subtitle">MIT-Bengaluru DV-LAB & OOPS-LAB Codes</p>
+    <p class="subtitle">MIT-Bengaluru Semester Planner</p>
 
     <div class="lang-tabs">
         <div class="lang-tab python active" onclick="switchLang('python')">Python</div>
@@ -140,11 +140,7 @@
 
     <div id="python-section" class="content-section active"></div>
 
-    <div id="java-section" class="content-section">
-        <div style="text-align:center; padding: 20px; color: var(--subtitle);">
-            ☕ Java codes coming soon!
-        </div>
-    </div>
+    <div id="java-section" class="content-section"></div>
 
 </div>
 
@@ -153,27 +149,98 @@
     const REPO_USER = "ROYALKINGSJ";
     const REPO_NAME = "mit-attendance-calculator";
     const BRANCH = "main";
-    const SAVE_KEY = 'mit_calc_save'; 
+    const SAVE_KEY = 'mit_calc_save';
     
-    // Define the Weeks and their Files
+    // --- DATABASE ---
     const DATA = {
         python: [
             {
-                id: "week1",
+                id: "py_week1",
                 name: "Week 1",
                 folder: "PYTHON_CODES/WEEK_1",
                 files: ["WEEK_1_1.py", "WEEK_1_2.py", "WEEK_1_3.py", "WEEK_1_4.py", "WEEK_1_5.py"]
             },
             {
-                id: "week2",
+                id: "py_week2",
                 name: "Week 2",
                 folder: "PYTHON_CODES/WEEK_2",
                 files: ["WEEK_2_1.py", "WEEK_2_2.py", "WEEK_2_3.py", "WEEK_2_4.py", "WEEK_2_5.py"]
             }
+        ],
+        java: [
+            {
+                id: "java_week1",
+                name: "Week 1",
+                folder: "JAVA_CODES",  // Files are currently in the root of JAVA_CODES
+                files: ["WEEK_1_1.java", "WEEK_1_2.java", "WEEK_1_3.java"]
+            }
+            // Add Week 2 block here later when you have the files
         ]
     };
 
-    // --- SHARED THEME LOGIC ---
+    // --- RENDER LOGIC (Generic for both languages) ---
+    function renderLists() {
+        ['python', 'java'].forEach(lang => {
+            const container = document.getElementById(`${lang}-section`);
+            container.innerHTML = ""; // Clear existing
+
+            // If no data, show message
+            if (!DATA[lang] || DATA[lang].length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--subtitle);">Coming soon!</div>`;
+                return;
+            }
+
+            DATA[lang].forEach(week => {
+                let fileRowsHTML = "";
+                week.files.forEach(file => {
+                    const viewLink = `https://github.com/${REPO_USER}/${REPO_NAME}/blob/${BRANCH}/${week.folder}/${file}`;
+                    const rawLink = `https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/${BRANCH}/${week.folder}/${file}`;
+                    
+                    fileRowsHTML += `
+                    <div class="file-row">
+                        <span class="file-name">📄 ${file}</span>
+                        <div class="file-actions">
+                            <a href="${viewLink}" target="_blank" class="icon-btn btn-view">👁️ View</a>
+                            <a href="javascript:void(0)" onclick="downloadRaw('${rawLink}', '${file}')" class="icon-btn">⬇️ DL</a>
+                        </div>
+                    </div>`;
+                });
+
+                const folderLink = `https://github.com/${REPO_USER}/${REPO_NAME}/tree/${BRANCH}/${week.folder}`;
+
+                container.innerHTML += `
+                <div class="week-item" id="${week.id}">
+                    <div class="week-header" onclick="toggleWeek('${week.id}')">
+                        <span class="week-title">
+                            <span class="chevron">▼</span> ${week.name}
+                        </span>
+                        <div class="week-actions" onclick="event.stopPropagation()">
+                            <a href="${folderLink}" target="_blank" class="btn-dl-all">📂 Open Folder</a>
+                        </div>
+                    </div>
+                    <div class="file-list">
+                        ${fileRowsHTML}
+                    </div>
+                </div>`;
+            });
+        });
+    }
+
+    // --- HELPER FUNCTIONS ---
+    
+    function toggleWeek(id) {
+        document.getElementById(id).classList.toggle('open');
+    }
+
+    function switchLang(lang) {
+        document.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
+        document.querySelector(`.lang-tab.${lang}`).classList.add('active');
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(`${lang}-section`).classList.add('active');
+    }
+
+    // --- THEME & DOWNLOAD LOGIC ---
+
     function loadTheme() {
         const saved = localStorage.getItem(SAVE_KEY);
         if (saved) {
@@ -200,93 +267,31 @@
         localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     }
 
-    // --- FORCE DOWNLOAD FUNCTION (FIXED) ---
     async function downloadRaw(url, filename) {
         try {
-            // 1. Fetch the code as text
             const response = await fetch(url);
             if (!response.ok) throw new Error("Network response was not ok");
             const text = await response.text();
-
-            // 2. Create a "Blob" (File object)
             const blob = new Blob([text], { type: 'text/plain' });
-            
-            // 3. Create a temporary link to that Blob
             const blobUrl = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = blobUrl;
-            link.download = filename; // This attribute forces download
-            
-            // 4. Click it and cleanup
+            link.download = filename;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             window.URL.revokeObjectURL(blobUrl);
-
         } catch (error) {
             console.error("Download failed:", error);
-            alert("Download failed. Opening in new tab instead.");
+            alert("Download failed. Opening in new tab.");
             window.open(url, '_blank');
         }
-    }
-
-    // --- RENDER LOGIC ---
-    function renderPython() {
-        const container = document.getElementById('python-section');
-        container.innerHTML = "";
-
-        DATA.python.forEach(week => {
-            let fileRowsHTML = "";
-            week.files.forEach(file => {
-                const viewLink = `https://github.com/${REPO_USER}/${REPO_NAME}/blob/${BRANCH}/${week.folder}/${file}`;
-                const rawLink = `https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/${BRANCH}/${week.folder}/${file}`;
-                
-                // FIXED: Changed href to javascript:void(0) and added onclick to use our new function
-                fileRowsHTML += `
-                <div class="file-row">
-                    <span class="file-name">📄 ${file}</span>
-                    <div class="file-actions">
-                        <a href="${viewLink}" target="_blank" class="icon-btn btn-view">👁️ View</a>
-                        <a href="javascript:void(0)" onclick="downloadRaw('${rawLink}', '${file}')" class="icon-btn">⬇️ DL</a>
-                    </div>
-                </div>`;
-            });
-
-            const folderLink = `https://github.com/${REPO_USER}/${REPO_NAME}/tree/${BRANCH}/${week.folder}`;
-
-            container.innerHTML += `
-            <div class="week-item" id="${week.id}">
-                <div class="week-header" onclick="toggleWeek('${week.id}')">
-                    <span class="week-title">
-                        <span class="chevron">▼</span> ${week.name}
-                    </span>
-                    <div class="week-actions" onclick="event.stopPropagation()">
-                        <a href="${folderLink}" target="_blank" class="btn-dl-all">📂 Open Folder</a>
-                    </div>
-                </div>
-                <div class="file-list">
-                    ${fileRowsHTML}
-                </div>
-            </div>`;
-        });
-    }
-
-    function toggleWeek(id) {
-        const item = document.getElementById(id);
-        item.classList.toggle('open');
-    }
-
-    function switchLang(lang) {
-        document.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
-        document.querySelector(`.lang-tab.${lang}`).classList.add('active');
-        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-        document.getElementById(`${lang}-section`).classList.add('active');
     }
 
     // Init
     window.onload = function() {
         loadTheme(); 
-        renderPython();
+        renderLists();
     };
 </script>
 
