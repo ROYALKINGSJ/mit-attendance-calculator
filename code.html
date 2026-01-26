@@ -171,14 +171,13 @@
             {
                 id: "java_week1",
                 name: "Week 1",
-                folder: "JAVA_CODES",  // Files are currently in the root of JAVA_CODES
+                folder: "JAVA_CODES/WEEK_1", // UPDATED: Points to subfolder now
                 files: ["WEEK_1_1.java", "WEEK_1_2.java", "WEEK_1_3.java"]
             }
-            // Add Week 2 block here later when you have the files
         ]
     };
 
-    // --- RENDER LOGIC (Generic for both languages) ---
+    // --- RENDER LOGIC ---
     function renderLists() {
         ['python', 'java'].forEach(lang => {
             const container = document.getElementById(`${lang}-section`);
