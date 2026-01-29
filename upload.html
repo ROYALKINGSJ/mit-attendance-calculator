@@ -22,7 +22,6 @@
         h1 { margin: 0 0 10px 0; }
         .subtitle { color: var(--subtitle); font-size: 0.9rem; margin-bottom: 25px; }
         
-        /* Changed input type to text for App Number */
         input { width: 100%; padding: 12px; margin: 8px 0; background: #2d2d2d; border: 1px solid var(--border); color: var(--text); border-radius: 8px; box-sizing: border-box; }
         
         button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: opacity 0.2s; }
@@ -41,6 +40,9 @@
         /* Loading Bar */
         #progress-container { width: 100%; background: #333; height: 6px; border-radius: 3px; margin-top: 15px; display: none; }
         #progress-bar { height: 100%; background: var(--primary); width: 0%; border-radius: 3px; transition: width 0.2s; }
+        
+        .nav-link { color: var(--subtitle); font-size: 0.8rem; display:block; margin-top: 15px; text-decoration: none; }
+        .nav-link:hover { color: var(--text); }
     </style>
 </head>
 <body>
@@ -50,13 +52,13 @@
         <h1>🔐 Student Login</h1>
         <p class="subtitle">Secure temporary storage (24h)</p>
         
-        <input type="text" id="app-num" placeholder="Application Number (e.g., 220950)">
-        <input type="password" id="password" placeholder="Password">
+        <input type="text" id="app-num" placeholder="Application Number">
+        <input type="password" id="password" placeholder="Password (Min 6 chars)">
         
         <button onclick="login()">Log In</button>
         <button class="secondary" onclick="register()">Create Account</button>
         <p id="auth-error" style="color: var(--danger); font-size: 0.9rem; margin-top: 10px;"></p>
-        <a href="index.html" style="color: var(--subtitle); font-size: 0.8rem; display:block; margin-top: 15px;">← Back to Home</a>
+        <a href="index.html" class="nav-link">← Back to Home</a>
     </div>
 
     <div id="app-view">
@@ -77,14 +79,16 @@
         </div>
 
         <button class="secondary" onclick="logout()">Log Out</button>
+        <a href="index.html" class="nav-link">← Back to Home</a>
     </div>
 </div>
 
 <script type="module">
-    // Import Firebase
+    // Import Firebase SDKs
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getStorage, ref, uploadBytesResumable, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     // YOUR CONFIG
     const firebaseConfig = {
@@ -96,13 +100,13 @@
       appId: "1:293801887483:web:31894382241e2535bcd25e"
     };
 
-    // Initialize
+    // Initialize Services
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const storage = getStorage(app);
+    const db = getFirestore(app);
 
-    // --- HELPER: ADD/REMOVE FAKE EMAIL DOMAIN ---
-    const DOMAIN = "@mit.app"; // Invisible domain
+    const DOMAIN = "@mit.app"; 
 
     function getEmail(appNum) {
         return appNum.trim() + DOMAIN;
@@ -114,7 +118,7 @@
 
     // --- AUTH LOGIC ---
     window.login = async () => {
-        const appNum = document.getElementById('app-num').value;
+        const appNum = document.getElementById('app-num').value.trim();
         const pass = document.getElementById('password').value;
         
         if(!appNum || !pass) {
@@ -133,20 +137,43 @@
     };
 
     window.register = async () => {
-        const appNum = document.getElementById('app-num').value;
+        const appNum = document.getElementById('app-num').value.trim();
         const pass = document.getElementById('password').value;
+        const btn = document.querySelector('button.secondary');
 
         if(!appNum || !pass) {
             document.getElementById('auth-error').innerText = "Please enter App Number and Password";
             return;
         }
 
+        btn.innerText = "Checking...";
+        btn.disabled = true;
+
         try {
+            // 1. CHECK WHITELIST IN FIRESTORE
+            // We look for a document where the ID matches the App Number
+            const docRef = doc(db, "whitelist", appNum);
+            const docSnap = await getDoc(docRef);
+
+            if (!docSnap.exists()) {
+                // Not found in database
+                throw new Error("⛔ This Application Number is not authorized.");
+            }
+
+            // 2. CREATE ACCOUNT
             await createUserWithEmailAndPassword(auth, getEmail(appNum), pass);
+
         } catch (error) {
             let msg = error.message;
             if(msg.includes("email-already-in-use")) msg = "Account already exists! Try Logging in.";
+            if(msg.includes("weak-password")) msg = "Password must be at least 6 characters.";
+            // If it's our custom error, show it directly
+            if (msg.includes("authorized")) msg = error.message;
+            
             document.getElementById('auth-error').innerText = msg;
+        } finally {
+            btn.innerText = "Create Account";
+            btn.disabled = false;
         }
     };
 
@@ -157,7 +184,6 @@
         if (user) {
             document.getElementById('auth-view').classList.remove('visible');
             document.getElementById('app-view').classList.add('visible');
-            // Show only the App Number, not the fake email
             document.getElementById('user-display').innerText = "App No: " + getAppNum(user.email);
             loadFiles(user.uid);
         } else {
