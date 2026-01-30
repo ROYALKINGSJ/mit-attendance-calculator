@@ -17,6 +17,7 @@
             --accent-hover: #2563eb;
             --border-color: #334155;
             --danger-color: #ef4444;
+            --success-color: #22c55e;
             --input-bg: #0f172a;
         }
 
@@ -30,6 +31,7 @@
             --accent-hover: #1d4ed8;
             --border-color: #e2e8f0;
             --danger-color: #dc2626;
+            --success-color: #16a34a;
             --input-bg: #f1f5f9;
         }
 
@@ -112,6 +114,32 @@
         }
         .theme-toggle:hover { opacity: 1; transform: scale(1.1); background: transparent; }
 
+        /* --- STORAGE BAR --- */
+        .storage-info {
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-align: right;
+        }
+        .storage-track {
+            width: 100%;
+            height: 8px;
+            background-color: var(--input-bg);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+        .storage-fill {
+            height: 100%;
+            background-color: var(--success-color);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        /* Color changes as it gets full */
+        .storage-fill.warning { background-color: #f59e0b; }
+        .storage-fill.danger { background-color: var(--danger-color); }
+
         /* --- FILE LIST --- */
         .upload-area {
             border: 2px dashed var(--border-color);
@@ -143,6 +171,8 @@
         }
         .file-link:hover { text-decoration: underline; }
 
+        .file-meta { font-size: 0.75rem; color: var(--text-secondary); margin-right: 10px; }
+
         button.delete-btn {
             background-color: transparent;
             color: var(--danger-color);
@@ -153,7 +183,7 @@
         }
         button.delete-btn:hover { background-color: rgba(239, 68, 68, 0.1); }
 
-        /* Progress Bar */
+        /* Upload Progress Bar */
         #progress-container { width: 100%; height: 6px; background: var(--border-color); border-radius: 3px; margin-top: 10px; display: none; overflow: hidden;}
         #progress-bar { height: 100%; background: var(--accent-color); width: 0%; transition: width 0.2s; }
 
@@ -187,9 +217,14 @@
         <h1>☁️ My Cloud</h1>
         <p class="subtitle" id="user-display">Loading...</p>
 
+        <div class="storage-info" id="storage-text">0 MB / 25 MB used</div>
+        <div class="storage-track">
+            <div class="storage-fill" id="storage-fill"></div>
+        </div>
+
         <div class="upload-area">
             <input type="file" id="file-input" style="display:none" onchange="handleFileSelect()">
-            <button class="secondary" onclick="document.getElementById('file-input').click()" style="width:auto; margin:0;">📂 Select File (Max 25MB)</button>
+            <button class="secondary" onclick="document.getElementById('file-input').click()" style="width:auto; margin:0;">📂 Select File</button>
             <p id="selected-file" style="margin: 10px 0 0 0; font-size: 0.9rem; font-style: italic; color: var(--text-secondary);"></p>
             
             <div id="progress-container"><div id="progress-bar"></div></div>
@@ -208,7 +243,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getStorage, ref, uploadBytesResumable, getDownloadURL, listAll, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL, listAll, deleteObject, getMetadata } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     // --- CONFIG ---
@@ -227,13 +262,15 @@
     const db = getFirestore(app);
     const DOMAIN = "@mit.app"; 
 
-    // --- THEME SYNC LOGIC ---
-    // 1. Check LocalStorage on load
+    // --- CONSTANTS ---
+    const MAX_STORAGE_BYTES = 25 * 1024 * 1024; // 25 MB in Bytes
+    let currentUsedBytes = 0;
+
+    // --- THEME SYNC ---
     const savedTheme = localStorage.getItem("theme") || "dark";
     document.documentElement.setAttribute("data-theme", savedTheme);
     updateThemeIcon(savedTheme);
 
-    // 2. Toggle Function
     window.toggleTheme = () => {
         const current = document.documentElement.getAttribute("data-theme");
         const newTheme = current === "light" ? "dark" : "light";
@@ -241,12 +278,9 @@
         localStorage.setItem("theme", newTheme);
         updateThemeIcon(newTheme);
     }
+    function updateThemeIcon(theme) { document.getElementById("theme-icon").innerText = theme === "light" ? "🌙" : "☀️"; }
 
-    function updateThemeIcon(theme) {
-        document.getElementById("theme-icon").innerText = theme === "light" ? "🌙" : "☀️";
-    }
-
-    // --- AUTH LOGIC ---
+    // --- AUTH ---
     function getEmail(appNum) { return appNum.trim() + DOMAIN; }
     function getAppNum(email) { return email.replace(DOMAIN, ""); }
 
@@ -254,7 +288,6 @@
         const appNum = document.getElementById('app-num').value.trim();
         const pass = document.getElementById('password').value;
         if(!appNum || !pass) return showError("Please enter all fields.");
-        
         try { await signInWithEmailAndPassword(auth, getEmail(appNum), pass); } 
         catch (error) { showError("Invalid App Number or Password."); }
     };
@@ -263,31 +296,23 @@
         const appNum = document.getElementById('app-num').value.trim();
         const pass = document.getElementById('password').value;
         if(!appNum || !pass) return showError("Please enter all fields.");
-        
         const btn = document.querySelector('#auth-view button.secondary');
         const originalText = btn.innerText;
-        btn.innerText = "Checking Whitelist..."; btn.disabled = true;
-
+        btn.innerText = "Checking..."; btn.disabled = true;
         try {
-            // 1. Check Whitelist
             const docRef = doc(db, "whitelist", appNum);
             const docSnap = await getDoc(docRef);
-            if (!docSnap.exists()) throw new Error("⛔ Number not found in Student List.");
-
-            // 2. Create Auth
+            if (!docSnap.exists()) throw new Error("⛔ Number not found in Whitelist.");
             await createUserWithEmailAndPassword(auth, getEmail(appNum), pass);
         } catch (error) {
             let msg = error.message;
             if(msg.includes("email-already-in-use")) msg = "Account exists! Please Log In.";
             if(msg.includes("weak-password")) msg = "Password must be 6+ chars.";
             showError(msg);
-        } finally {
-            btn.innerText = originalText; btn.disabled = false;
-        }
+        } finally { btn.innerText = originalText; btn.disabled = false; }
     };
 
     window.logout = () => signOut(auth);
-
     function showError(msg) { document.getElementById('auth-error').innerText = msg; }
 
     onAuthStateChanged(auth, (user) => {
@@ -300,26 +325,28 @@
             document.getElementById('app-view').classList.add('hidden');
             document.getElementById('auth-view').classList.remove('hidden');
             document.getElementById('file-list').innerHTML = "";
-            document.getElementById('auth-error').innerText = "";
+            currentUsedBytes = 0;
+            updateStorageUI();
         }
     });
 
-    // --- FILE LOGIC ---
+    // --- STORAGE LOGIC ---
     let selectedFile = null;
     
     window.handleFileSelect = () => {
         const file = document.getElementById('file-input').files[0];
         if (!file) return;
         
-        // 25MB Limit Check
-        if (file.size > 25 * 1024 * 1024) { 
-            alert("⚠️ File too large! Max size is 25MB."); 
-            document.getElementById('file-input').value = ""; // Clear input
-            return; 
+        // PRE-CHECK: Does this single file exceed remaining space?
+        if (currentUsedBytes + file.size > MAX_STORAGE_BYTES) {
+            const remainingMB = ((MAX_STORAGE_BYTES - currentUsedBytes) / (1024*1024)).toFixed(2);
+            alert(`⚠️ Not enough space!\n\nFile size: ${(file.size/(1024*1024)).toFixed(2)} MB\nSpace left: ${remainingMB} MB`);
+            document.getElementById('file-input').value = ""; 
+            return;
         }
         
         selectedFile = file;
-        document.getElementById('selected-file').innerText = "Selected: " + file.name;
+        document.getElementById('selected-file').innerText = "Selected: " + file.name + ` (${(file.size/1024/1024).toFixed(2)} MB)`;
         document.getElementById('upload-btn').classList.remove('hidden');
     }
 
@@ -327,6 +354,12 @@
         if (!selectedFile) return;
         const user = auth.currentUser;
         if (!user) return;
+
+        // DOUBLE CHECK: Re-calculate total just in case
+        if (currentUsedBytes + selectedFile.size > MAX_STORAGE_BYTES) {
+             alert("⛔ Storage Limit Exceeded (25MB Total).");
+             return;
+        }
 
         const storageRef = ref(storage, `uploads/${user.uid}/${selectedFile.name}`);
         const uploadTask = uploadBytesResumable(storageRef, selectedFile);
@@ -361,46 +394,79 @@
         document.getElementById('progress-bar').style.width = '0%';
     }
 
-    // --- DELETE LOGIC ---
+    // --- DELETE ---
     window.deleteFile = async (fileName) => {
         const user = auth.currentUser;
-        if (!user) return;
-        
-        if(!confirm(`Are you sure you want to delete "${fileName}"? This cannot be undone.`)) return;
+        if (!user || !confirm(`Delete "${fileName}"?`)) return;
 
         const fileRef = ref(storage, `uploads/${user.uid}/${fileName}`);
         try {
             await deleteObject(fileRef);
-            loadFiles(user.uid); // Refresh list
+            loadFiles(user.uid); 
         } catch (error) {
-            alert("Could not delete file: " + error.message);
+            alert("Error deleting: " + error.message);
         }
     }
 
-    function loadFiles(uid) {
+    // --- LOAD FILES & CALCULATE SIZE ---
+    async function loadFiles(uid) {
         const listRef = ref(storage, `uploads/${uid}`);
         const listContainer = document.getElementById('file-list');
         listContainer.innerHTML = '<div style="text-align:center; color:var(--text-secondary)">Loading...</div>';
 
-        listAll(listRef).then((res) => {
+        try {
+            const res = await listAll(listRef);
             listContainer.innerHTML = "";
-            if (res.items.length === 0) { 
-                listContainer.innerHTML = '<div style="text-align:center; color:var(--text-secondary); margin-top:20px;">No files uploaded yet.</div>'; 
-                return; 
-            }
-            res.items.forEach((itemRef) => {
-                getDownloadURL(itemRef).then((url) => {
-                    listContainer.innerHTML += `
-                        <div class="file-item">
-                            <a href="${url}" target="_blank" class="file-link">📄 ${itemRef.name}</a>
-                            <button class="delete-btn" onclick="deleteFile('${itemRef.name}')" title="Delete File">🗑️</button>
-                        </div>`;
-                });
+            
+            // 1. Get Metadata for ALL files to calculate total size
+            const filePromises = res.items.map(async (itemRef) => {
+                const url = await getDownloadURL(itemRef);
+                const meta = await getMetadata(itemRef);
+                return { ref: itemRef, url, meta };
             });
-        }).catch((error) => { 
-            console.error(error); 
-            listContainer.innerHTML = '<div style="text-align:center; color:var(--danger-color)">Error loading files.</div>'; 
-        });
+
+            const files = await Promise.all(filePromises);
+
+            // 2. Calculate Total Size
+            currentUsedBytes = files.reduce((acc, file) => acc + file.meta.size, 0);
+            updateStorageUI();
+
+            // 3. Render List
+            if (files.length === 0) {
+                listContainer.innerHTML = '<div style="text-align:center; margin-top:20px; color:var(--text-secondary)">No files uploaded.</div>';
+                return;
+            }
+
+            files.forEach(file => {
+                const sizeMB = (file.meta.size / (1024 * 1024)).toFixed(2);
+                listContainer.innerHTML += `
+                    <div class="file-item">
+                        <div style="flex-grow:1; display:flex; align-items:center;">
+                            <a href="${file.url}" target="_blank" class="file-link">📄 ${file.ref.name}</a>
+                            <span class="file-meta">(${sizeMB} MB)</span>
+                        </div>
+                        <button class="delete-btn" onclick="deleteFile('${file.ref.name}')" title="Delete">🗑️</button>
+                    </div>`;
+            });
+
+        } catch (error) {
+            console.error(error);
+            listContainer.innerHTML = '<div style="text-align:center; color:var(--danger-color)">Error loading files.</div>';
+        }
+    }
+
+    function updateStorageUI() {
+        const usedMB = (currentUsedBytes / (1024 * 1024)).toFixed(2);
+        const percent = (currentUsedBytes / MAX_STORAGE_BYTES) * 100;
+        
+        document.getElementById('storage-text').innerText = `${usedMB} MB / 25.00 MB used`;
+        const fillBar = document.getElementById('storage-fill');
+        fillBar.style.width = percent + "%";
+
+        // Change color based on usage
+        fillBar.className = "storage-fill"; // reset
+        if(percent > 80) fillBar.classList.add("warning");
+        if(percent > 95) fillBar.classList.add("danger");
     }
 </script>
 </body>
