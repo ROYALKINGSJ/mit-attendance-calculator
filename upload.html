@@ -6,7 +6,7 @@
     <title>Student Cloud Storage</title>
     <link rel="icon" href="https://fav.farm/☁️" />
     <style>
-        /* --- UNIFIED THEME VARIABLES --- */
+        /* --- UNIFIED THEME VARIABLES (Matches Index/Code) --- */
         :root {
             /* Dark Mode (Default) */
             --bg-color: #0f172a;
@@ -16,9 +16,9 @@
             --accent-color: #3b82f6;
             --accent-hover: #2563eb;
             --border-color: #334155;
-            --danger-color: #ef4444;
-            --success-color: #22c55e;
             --input-bg: #0f172a;
+            --success-color: #22c55e;
+            --danger-color: #ef4444;
         }
 
         /* Light Mode Overrides */
@@ -30,21 +30,23 @@
             --accent-color: #2563eb;
             --accent-hover: #1d4ed8;
             --border-color: #e2e8f0;
-            --danger-color: #dc2626;
-            --success-color: #16a34a;
             --input-bg: #f1f5f9;
+            --success-color: #16a34a;
+            --danger-color: #dc2626;
         }
 
         /* --- GLOBAL STYLES --- */
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start; /* Aligns to top to prevent jumping */
             min-height: 100vh;
+            padding: 40px 20px;
+            box-sizing: border-box;
             transition: background-color 0.3s, color 0.3s;
         }
 
@@ -52,23 +54,95 @@
             background-color: var(--card-bg);
             padding: 2.5rem;
             border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             width: 100%;
-            max-width: 480px;
-            text-align: center;
+            max-width: 750px; /* Matched width */
             position: relative;
+            border: 1px solid var(--border-color);
+            min-height: 600px; /* Matched height */
+        }
+
+        /* --- HEADER (Exactly matching code.html) --- */
+        .header-top { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            height: 40px; 
+        }
+        
+        .repo-link { 
+            font-size: 0.85rem; 
+            color: var(--accent-color); 
+            text-decoration: none; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            font-weight: 500;
+            opacity: 0.9; 
+        }
+        .repo-link:hover { opacity: 1; text-decoration: underline; }
+        
+        .header-actions { display: flex; gap: 10px; }
+
+        .theme-toggle, .btn-reset { 
+            background: none; 
+            border: 1px solid var(--border-color); 
+            cursor: pointer; 
+            color: var(--text-color); 
+            padding: 6px 12px; /* FIXED: Matches code.html */
+            border-radius: 8px; 
+            font-size: 0.85rem; 
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            height: 32px;
+        }
+        .theme-toggle:hover, .btn-reset:hover { background: var(--input-bg); transform: translateY(-1px); border-color: var(--text-secondary); }
+
+        /* --- NAVIGATION TABS (Exactly matching code.html) --- */
+        .nav-container {
+            display: flex;
+            background-color: var(--input-bg);
+            padding: 5px;
+            border-radius: 12px;
+            margin-bottom: 25px; /* FIXED: Matches code.html */
             border: 1px solid var(--border-color);
         }
 
-        h1 { margin-bottom: 0.5rem; font-size: 1.8rem; }
-        .subtitle { color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.9rem; line-height: 1.5; }
+        .nav-tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0; /* FIXED: Matches code.html */
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: block;
+        }
 
-        /* --- INPUTS & BUTTONS --- */
+        .nav-tab:hover { color: var(--text-color); background-color: rgba(125, 125, 125, 0.1); }
+
+        .nav-tab.active {
+            background-color: var(--card-bg);
+            color: var(--accent-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        h1 { text-align: center; margin: 10px 0 5px 0; font-size: 2rem; letter-spacing: -0.5px; }
+        .subtitle { text-align: center; color: var(--text-secondary); font-size: 1rem; margin-bottom: 25px; }
+
+        /* --- CLOUD SPECIFIC STYLES --- */
         input {
             width: 100%;
-            padding: 0.75rem 1rem;
+            padding: 12px;
             margin-bottom: 1rem;
-            border-radius: 0.5rem;
+            border-radius: 8px;
             border: 1px solid var(--border-color);
             background-color: var(--input-bg);
             color: var(--text-color);
@@ -80,8 +154,8 @@
 
         button {
             width: 100%;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
+            padding: 12px;
+            border-radius: 8px;
             border: none;
             background-color: var(--accent-color);
             color: white;
@@ -97,31 +171,12 @@
         button.secondary { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-color); }
         button.secondary:hover { background-color: var(--input-bg); }
 
-        /* --- THEME TOGGLE (Top Right) --- */
-        .theme-toggle {
-            position: absolute;
-            top: 1.5rem;
-            right: 1.5rem;
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0.25rem;
-            width: auto;
-            margin: 0;
-            opacity: 0.8;
-            transition: transform 0.3s ease;
-        }
-        .theme-toggle:hover { opacity: 1; transform: scale(1.1); background: transparent; }
-
-        /* --- STATS BAR --- */
         .stats-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: var(--text-secondary);
         }
         
@@ -136,11 +191,11 @@
 
         .storage-track {
             width: 100%;
-            height: 6px;
+            height: 8px;
             background-color: var(--input-bg);
-            border-radius: 3px;
+            border-radius: 4px;
             overflow: hidden;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             border: 1px solid var(--border-color);
         }
         .storage-fill {
@@ -152,59 +207,59 @@
         .storage-fill.warning { background-color: #f59e0b; }
         .storage-fill.danger { background-color: var(--danger-color); }
 
-
-        /* --- FILE LIST --- */
         .upload-area {
             border: 2px dashed var(--border-color);
-            padding: 2rem;
-            border-radius: 0.75rem;
-            margin-bottom: 1.5rem;
+            padding: 2.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
             background-color: var(--input-bg);
             transition: border-color 0.3s;
+            text-align: center;
         }
+        .upload-area:hover { border-color: var(--accent-color); }
         
-        .file-list { margin-top: 1.5rem; text-align: left; max-height: 300px; overflow-y: auto; }
+        .file-list { margin-top: 1.5rem; text-align: left; max-height: 400px; overflow-y: auto; }
         
         .file-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.75rem;
+            padding: 12px 15px;
             background-color: var(--input-bg);
             border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            margin-bottom: 8px;
         }
         
         .file-link {
             color: var(--accent-color);
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             word-break: break-all;
             margin-right: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .file-link:hover { text-decoration: underline; }
 
-        .file-meta { font-size: 0.75rem; color: var(--text-secondary); margin-right: 10px; }
+        .file-meta { font-size: 0.8rem; color: var(--text-secondary); margin-right: 15px; }
 
         button.delete-btn {
             background-color: transparent;
-            color: var(--danger-color);
+            color: var(--text-secondary);
             width: auto;
-            padding: 0.25rem 0.5rem;
+            padding: 6px;
             margin: 0;
             font-size: 1.1rem;
+            border: 1px solid transparent;
         }
-        button.delete-btn:hover { background-color: rgba(239, 68, 68, 0.1); }
+        button.delete-btn:hover { color: var(--danger-color); background-color: rgba(239, 68, 68, 0.1); border-color: var(--danger-color); }
 
-        /* Upload Progress Bar */
-        #progress-container { width: 100%; height: 6px; background: var(--border-color); border-radius: 3px; margin-top: 10px; display: none; overflow: hidden;}
+        #progress-container { width: 100%; height: 6px; background: var(--border-color); border-radius: 3px; margin-top: 15px; display: none; overflow: hidden;}
         #progress-bar { height: 100%; background: var(--accent-color); width: 0%; transition: width 0.2s; }
 
-        /* Utilities */
         .hidden { display: none !important; }
-        .back-link { display: block; margin-top: 1.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; }
-        .back-link:hover { color: var(--accent-color); }
         .error-msg { color: var(--danger-color); font-size: 0.9rem; margin-top: 0.5rem; }
 
     </style>
@@ -212,7 +267,25 @@
 <body>
 
 <div class="container">
-    <button class="theme-toggle" onclick="toggleTheme()" id="theme-icon" title="Toggle Theme">☀️</button>
+    
+    <div class="header-top">
+        <a href="https://github.com/ROYALKINGSJ/attendance-calculator" target="_blank" class="repo-link">
+            <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+            GitHub
+            <span id="last-updated" style="margin-left: 5px; opacity: 0.6; font-family: monospace; font-size: 0.75rem;"></span>
+        </a>
+        
+        <div class="header-actions">
+            <button class="btn-reset" onclick="location.reload()" title="Refresh Page">↺ Refresh</button>
+            <button class="theme-toggle" onclick="toggleTheme()" id="theme-icon">☀️ Light Mode</button>
+        </div>
+    </div>
+
+    <div class="nav-container">
+        <a href="index.html" class="nav-tab">📊 Attendance</a>
+        <a href="code.html" class="nav-tab">💻 Code</a>
+        <div class="nav-tab active">☁️ Cloud</div>
+    </div>
 
     <div id="auth-view">
         <h1>🔐 Student Login</h1>
@@ -224,7 +297,6 @@
         <button onclick="login()">Access Cloud</button>
         <button class="secondary" onclick="register()">First Time? Create Account</button>
         <p id="auth-error" class="error-msg"></p>
-        <a href="index.html" class="back-link">← Back to Home</a>
     </div>
 
     <div id="app-view" class="hidden">
@@ -242,10 +314,10 @@
         <div class="upload-area">
             <input type="file" id="file-input" style="display:none" onchange="handleFileSelect()">
             <button class="secondary" onclick="document.getElementById('file-input').click()" style="width:auto; margin:0;">📂 Select File</button>
-            <p id="selected-file" style="margin: 10px 0 0 0; font-size: 0.9rem; font-style: italic; color: var(--text-secondary);"></p>
+            <p id="selected-file" style="margin: 15px 0 0 0; font-size: 0.9rem; font-style: italic; color: var(--text-secondary);"></p>
             
             <div id="progress-container"><div id="progress-bar"></div></div>
-            <button onclick="uploadFile()" id="upload-btn" class="hidden" style="margin-top: 15px;">⬆️ Upload to Cloud</button>
+            <button onclick="uploadFile()" id="upload-btn" class="hidden" style="margin-top: 20px;">⬆️ Upload to Cloud</button>
         </div>
 
         <h3 style="text-align: left; margin-bottom: 10px; color: var(--text-color);">My Files</h3>
@@ -253,7 +325,6 @@
             </div>
 
         <button class="secondary" onclick="logout()" style="margin-top: 2rem;">Log Out</button>
-        <a href="index.html" class="back-link">← Back to Home</a>
     </div>
 </div>
 
@@ -297,7 +368,22 @@
         localStorage.setItem("theme", newTheme);
         updateThemeIcon(newTheme);
     }
-    function updateThemeIcon(theme) { document.getElementById("theme-icon").innerText = theme === "light" ? "🌙" : "☀️"; }
+    function updateThemeIcon(theme) { document.getElementById("theme-icon").innerText = theme === "light" ? "🌙 Dark Mode" : "☀️ Light Mode"; }
+
+    // --- GITHUB DATE FETCH ---
+    const REPO_USER = "ROYALKINGSJ";
+    const REPO_NAME = "attendance-calculator"; 
+    
+    async function fetchLastUpdated() {
+        const textEl = document.getElementById('last-updated');
+        try {
+            const res = await fetch(`https://api.github.com/repos/${REPO_USER}/${REPO_NAME}/commits?per_page=1`);
+            const data = await res.json();
+            const date = new Date(data[0].commit.author.date);
+            textEl.innerText = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        } catch (e) { console.log("Date fetch failed"); }
+    }
+    fetchLastUpdated();
 
     // --- AUTH ---
     function getEmail(appNum) { return appNum.trim() + DOMAIN; }
@@ -383,7 +469,7 @@
 
     function updateStatsUI() {
         const el = document.getElementById('daily-limit-text');
-        el.innerText = `Uploads Today: ${uploadsToday} / ${DAILY_UPLOAD_LIMIT}`;
+        el.innerText = `Uploads: ${uploadsToday}/${DAILY_UPLOAD_LIMIT}`;
         
         if (uploadsToday >= DAILY_UPLOAD_LIMIT) {
             el.style.borderColor = "var(--danger-color)";

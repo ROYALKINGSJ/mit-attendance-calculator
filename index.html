@@ -6,164 +6,238 @@
     <title>MIT Attendance Manager</title>
     <link rel="icon" href="https://fav.farm/🎓" />
     <style>
-        /* --- CSS VARIABLES --- */
+        /* --- UNIFIED THEME VARIABLES --- */
         :root {
-            --primary: #4361ee;
-            --primary-hover: #3a0ca3;
-            --bg: #f8f9fa;
-            --card: #ffffff;
-            --text: #333;
-            --border: #e9ecef;
-            --input-bg: #fff;
-            --subtitle: #666;
-            --shadow: rgba(0, 0, 0, 0.1);
-            --note-warning: #e63946;
-            --tooltip-bg: #333;
+            /* Dark Mode (Default) */
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+            --success-color: #22c55e;
+            --danger-color: #ef4444;
+            --tooltip-bg: #f8fafc;
+            --tooltip-text: #0f172a;
+        }
+
+        /* Light Mode Overrides */
+        [data-theme="light"] {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #0f172a;
+            --text-secondary: #64748b;
+            --accent-color: #2563eb;
+            --accent-hover: #1d4ed8;
+            --border-color: #e2e8f0;
+            --input-bg: #f1f5f9;
+            --success-color: #16a34a;
+            --danger-color: #dc2626;
+            --tooltip-bg: #1e293b;
             --tooltip-text: #fff;
         }
 
-        /* Dark Mode Override */
-        body.dark-mode {
-            --bg: #121212;
-            --card: #1e1e1e;
-            --text: #e0e0e0;
-            --border: #333;
-            --input-bg: #2d2d2d;
-            --subtitle: #aaa;
-            --shadow: rgba(0, 0, 0, 0.5);
-            --note-warning: #ff6b6b;
-            --tooltip-bg: #fff;
-            --tooltip-text: #000;
+        /* --- GLOBAL STYLES --- */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Changed from center to align top for stability */
+            min-height: 100vh;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; transition: background 0.3s, color 0.3s; }
-        .container { background: var(--card); width: 100%; max-width: 600px; padding: 2rem; border-radius: 16px; box-shadow: 0 10px 25px var(--shadow); position: relative; }
-        
-        /* Header & Controls */
-        .header-controls { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
-        
-        /* Left side (Repo + Date) */
-        .left-header { display: flex; flex-direction: column; gap: 4px; }
-        .update-text { font-size: 0.7rem; color: var(--subtitle); opacity: 0.8; font-family: monospace; }
+        .container {
+            background-color: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 750px;
+            position: relative;
+            border: 1px solid var(--border-color);
+            /* Min-height ensures the box doesn't jump around if content is short */
+            min-height: 600px; 
+        }
 
-        /* Right side (Buttons) */
-        .top-btns { display: flex; gap: 8px; align-items: center; } 
-
-        h1 { text-align: center; margin: 0 0 5px 0; font-size: 1.8rem; letter-spacing: -0.5px; }
-        .subtitle { text-align: center; color: var(--subtitle); font-size: 0.9rem; margin-bottom: 5px; }
+        /* --- HEADER (Standardized Height) --- */
+        .header-top { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            height: 40px; /* Fixed height to prevent shifting */
+        }
         
-        .rec-note { font-size: 0.8rem; color: var(--subtitle); margin-top: 8px; font-style: italic; }
-
-        /* Links */
-        .repo-link { font-size: 0.85rem; color: var(--primary); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-weight: 500; }
-        .repo-link:hover { text-decoration: underline; }
+        .repo-link { 
+            font-size: 0.85rem; 
+            color: var(--accent-color); 
+            text-decoration: none; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            font-weight: 500;
+            opacity: 0.9; 
+        }
+        .repo-link:hover { opacity: 1; text-decoration: underline; }
         
-        /* Buttons (Toggle & Reset) */
+        .header-actions { display: flex; gap: 10px; }
+
         .theme-toggle, .btn-reset { 
             background: none; 
-            border: 1px solid var(--border); 
+            border: 1px solid var(--border-color); 
             cursor: pointer; 
-            color: var(--text); 
-            transition: all 0.2s; 
-        }
-
-        .theme-toggle { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; }
-        
-        .btn-reset {
-            padding: 6px;
-            border-radius: 8px;
+            color: var(--text-color); 
+            padding: 6px 12px; 
+            border-radius: 8px; 
+            font-size: 0.85rem; 
+            transition: all 0.2s;
             display: flex;
             align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
+            gap: 5px;
+            height: 32px; /* Fixed height */
+        }
+        .theme-toggle:hover, .btn-reset:hover { background: var(--input-bg); transform: translateY(-1px); border-color: var(--text-secondary); }
+
+        /* --- NAVIGATION TABS --- */
+        .nav-container {
+            display: flex;
+            background-color: var(--input-bg);
+            padding: 5px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
         }
 
-        .theme-toggle:hover, .btn-reset:hover { background: var(--border); transform: translateY(-1px); }
+        .nav-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: block;
+        }
 
-        /* Tabs */
-        .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
-        .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; font-weight: 600; color: var(--subtitle); transition: color 0.2s; }
-        .tab.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+        .nav-tab:hover { color: var(--text-color); background-color: rgba(125, 125, 125, 0.1); }
+
+        .nav-tab.active {
+            background-color: var(--card-bg);
+            color: var(--accent-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        h1 { text-align: center; margin: 0 0 8px 0; font-size: 2rem; letter-spacing: -0.5px; }
+        .subtitle { text-align: center; color: var(--text-secondary); font-size: 1rem; margin-bottom: 30px; }
         
-        /* Inputs & Selects */
+        /* --- SETTINGS BOX --- */
+        .settings-box { 
+            background: var(--input-bg); 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
+            border: 1px solid var(--border-color); 
+        }
+
         .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: var(--text-secondary); }
         
-        input[type="number"], select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; background: var(--input-bg); color: var(--text); font-size: 1rem; transition: border 0.2s; }
-        input[type="number"]:focus, select:focus { outline: none; border-color: var(--primary); }
+        input[type="number"], select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            background: var(--card-bg); 
+            color: var(--text-color); 
+            font-size: 1rem; 
+            transition: border-color 0.2s; 
+        }
+        input[type="number"]:focus, select:focus { outline: none; border-color: var(--accent-color); }
+
+        .rec-note { font-size: 0.85rem; color: var(--text-secondary); margin-top: 10px; font-style: italic; }
+
+        /* --- INTERNAL TABS (Days/Subject) --- */
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); }
+        .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; font-weight: 600; color: var(--text-secondary); transition: color 0.2s; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+        .tab:hover { color: var(--text-color); }
+        .tab.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
         
-        /* Action Button */
+        .mode-content { display: none; }
+        .mode-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- BUTTONS --- */
         .btn-calc { 
             width: 100%; 
             padding: 14px; 
-            background: linear-gradient(135deg, var(--primary), var(--primary-hover)); 
+            background-color: var(--accent-color); 
             color: white; 
             border: none; 
             border-radius: 10px; 
             cursor: pointer; 
             font-size: 1rem; 
             font-weight: 600;
-            margin-top: 15px; 
-            transition: transform 0.1s, box-shadow 0.2s; 
-            box-shadow: 0 4px 6px rgba(67, 97, 238, 0.3);
+            margin-top: 20px; 
+            transition: background-color 0.2s; 
         }
-        .btn-calc:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(67, 97, 238, 0.4); }
-        .btn-calc:active { transform: translateY(0); }
-        
-        /* Settings Section */
-        .settings-box { background: rgba(67, 97, 238, 0.08); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid rgba(67, 97, 238, 0.2); }
-        
-        /* Results Table */
-        .result-box { margin-top: 25px; border-top: 1px solid var(--border); padding-top: 20px; animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-calc:hover { background-color: var(--accent-hover); }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
-        th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid var(--border); }
-        th { color: var(--subtitle); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; position: relative; }
+        /* --- RESULTS TABLE --- */
+        .result-box { margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px; }
         
-        .safe { color: #2a9d8f; font-weight: bold; }
-        .danger { color: #e63946; font-weight: bold; }
-        .total-col { color: var(--subtitle); font-size: 0.85rem; }
-
-        /* --- TOOLTIP STYLES --- */
-        .info-icon { display: inline-block; margin-left: 4px; cursor: help; font-style: normal; font-size: 0.9rem; opacity: 0.7; }
-        .tooltip { visibility: hidden; width: 140px; background-color: var(--tooltip-bg); color: var(--tooltip-text); text-align: center; border-radius: 6px; padding: 8px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -70px; opacity: 0; transition: opacity 0.3s; font-size: 0.7rem; text-transform: none; letter-spacing: normal; font-weight: normal; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95rem; }
+        th, td { padding: 14px 10px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .safe { color: var(--success-color); font-weight: bold; }
+        .danger { color: var(--danger-color); font-weight: bold; }
+        
+        /* --- TOOLTIP --- */
+        .info-icon { display: inline-block; margin-left: 5px; cursor: help; opacity: 0.6; font-size: 0.9rem; position: relative; }
+        .tooltip { visibility: hidden; width: 150px; background-color: var(--tooltip-bg); color: var(--tooltip-text); text-align: center; border-radius: 6px; padding: 8px; position: absolute; z-index: 10; bottom: 130%; left: 50%; margin-left: -75px; opacity: 0; transition: opacity 0.3s; font-size: 0.75rem; text-transform: none; font-weight: normal; box-shadow: 0 4px 10px rgba(0,0,0,0.2); pointer-events: none; }
         .tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: var(--tooltip-bg) transparent transparent transparent; }
-        th:hover .tooltip { visibility: visible; opacity: 1; }
+        .info-icon:hover .tooltip { visibility: visible; opacity: 1; }
+        .info-icon:hover { opacity: 1; }
 
-        .mode-content { display: none; }
-        .mode-content.active { display: block; }
     </style>
 </head>
-<body class="dark-mode"> <div class="container">
-    <div class="header-controls">
-        <div class="left-header">
-            <a href="https://github.com/ROYALKINGSJ/attendance-calculator" target="_blank" class="repo-link">
-                <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
-                GitHub Repo
-            </a>
-            <span id="last-updated" class="update-text"></span>
-        </div>
+<body>
+
+<div class="container">
+    
+    <div class="header-top">
+        <a href="https://github.com/ROYALKINGSJ/attendance-calculator" target="_blank" class="repo-link">
+            <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+            GitHub
+            <span id="last-updated" style="margin-left: 5px; opacity: 0.6; font-family: monospace; font-size: 0.75rem;"></span>
+        </a>
         
-        <div class="top-btns">
-            <a href="upload.html" class="btn-reset" title="Student Cloud" style="text-decoration:none; color:inherit;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
-            </a>
-
-            <a href="code.html" class="btn-reset" title="View Lab Codes" style="text-decoration:none; color:inherit;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
-            </a>
-
-            <button class="btn-reset" onclick="resetApp()" title="Reset Everything">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-            </button>
-
-            <button class="theme-toggle" onclick="toggleTheme()">☀️ Light Mode</button>
+        <div class="header-actions">
+            <button class="btn-reset" onclick="resetApp()" title="Reset All Settings">↺ Reset</button>
+            <button class="theme-toggle" onclick="toggleTheme()" id="theme-icon">☀️ Light Mode</button>
         </div>
     </div>
 
-    <h1>🎓 Attendance Manager</h1>
+    <div class="nav-container">
+        <div class="nav-tab active">📊 Attendance</div>
+        <a href="code.html" class="nav-tab">💻 Code</a>
+        <a href="upload.html" class="nav-tab">☁️ Cloud</a>
+    </div>
+
+    <h1>Attendance Manager</h1>
     <p class="subtitle">MIT-Bengaluru Semester Planner</p>
     
     <div class="settings-box">
@@ -200,15 +274,15 @@
     </div>
 
     <div id="output" class="result-box" style="display:none;">
-        <h3>Results</h3>
+        <h3 style="margin-top:0;">Results</h3>
         <table id="resultTable">
             <thead>
                 <tr>
-                    <th>Subject <span class="info-icon">ⓘ<span class="tooltip">Name of the course code</span></span></th>
-                    <th>Total <span class="info-icon">ⓘ<span class="tooltip">Total number of classes this semester</span></span></th>
-                    <th>Att% <span class="info-icon">ⓘ<span class="tooltip">Your current projected attendance</span></span></th>
-                    <th>Status <span class="info-icon">ⓘ<span class="tooltip">Are you above or below the target?</span></span></th>
-                    <th>Safe Bunks <span class="info-icon">ⓘ<span class="tooltip">How many MORE classes you can skip safely</span></span></th>
+                    <th>Subject <span class="info-icon">ⓘ<span class="tooltip">Course Code</span></span></th>
+                    <th>Total <span class="info-icon">ⓘ<span class="tooltip">Total classes this semester</span></span></th>
+                    <th>Att% <span class="info-icon">ⓘ<span class="tooltip">Projected attendance</span></span></th>
+                    <th>Status <span class="info-icon">ⓘ<span class="tooltip">Above/Below Target</span></span></th>
+                    <th>Safe Bunks <span class="info-icon">ⓘ<span class="tooltip">Classes you can safely skip</span></span></th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -217,7 +291,7 @@
 </div>
 
 <script>
-    // --- MASTER DATA (A to X) ---
+    // --- MASTER DATA ---
     const SECTION_DB = {
         "A": [["FEE", "OOPS", "CPI", "CAEG_LAB"], ["OOPS_LAB", "EVS", "CM", "OOPS", "ACE"], ["FEE", "EVS", "CM", "EMSB", "DV_LAB"], ["ACE", "CM", "FEE", "EMSB"], ["EMSB", "CM", "OOPS", "ACE"]],
         "B": [["DV_LAB", "OOPS", "ACE", "CM", "EMSB"], ["FEE", "EMSB", "OOPS", "ACE"], ["CAEG_LAB", "CM", "FEE", "EMSB"], ["OOPS", "EVS", "CM", "ACE"], ["OOPS_LAB", "FEE", "CM", "EVS", "CPI"]],
@@ -254,10 +328,9 @@
     window.onload = function() {
         populateSectionSelect();
         loadSavedData();
-        fetchLastUpdated(); // New: Fetch GitHub Date
+        fetchLastUpdated();
     };
 
-    // --- NEW: FETCH GITHUB DATE ---
     async function fetchLastUpdated() {
         const repo = "ROYALKINGSJ/attendance-calculator";
         const textEl = document.getElementById('last-updated');
@@ -265,34 +338,29 @@
             const res = await fetch(`https://api.github.com/repos/${repo}/commits?per_page=1`);
             const data = await res.json();
             const date = new Date(data[0].commit.author.date);
-            textEl.innerText = "Updated: " + date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-        } catch (e) {
-            console.log("Could not fetch date");
-        }
+            textEl.innerText = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        } catch (e) { console.log("Date fetch failed"); }
     }
 
-    // --- RESET APP LOGIC ---
     function resetApp() {
-        if(confirm("Reset all settings to default (Light Mode, 82%)?")) {
+        if(confirm("Reset all settings to default (82%)?")) {
             localStorage.removeItem('mit_calc_save');
-            document.body.classList.remove('dark-mode');
-            document.querySelector('.theme-toggle').innerHTML = "🌙 Dark Mode";
+            // Reset to dark mode logic
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+            updateThemeIcon('dark');
+            
             document.getElementById('sectionSelect').value = "A";
             document.getElementById('targetPct').value = 82;
-            document.getElementById('mon').value = 0;
-            document.getElementById('tue').value = 0;
-            document.getElementById('wed').value = 0;
-            document.getElementById('thu').value = 0;
-            document.getElementById('fri').value = 0;
+            ['mon','tue','wed','thu','fri'].forEach(id => document.getElementById(id).value = 0);
             loadSectionData();
             document.getElementById('output').style.display = 'none';
         }
     }
 
-    // --- SAVE & LOAD ---
     function saveData() {
         const data = {
-            theme: document.body.classList.contains('dark-mode') ? 'dark' : 'light',
+            theme: document.documentElement.getAttribute('data-theme'),
             section: document.getElementById('sectionSelect').value,
             targetPct: document.getElementById('targetPct').value,
             days: {
@@ -313,23 +381,18 @@
 
     function loadSavedData() {
         const saved = localStorage.getItem('mit_calc_save');
+        // Theme Sync (Global)
+        const savedTheme = localStorage.getItem("theme") || "dark";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+        updateThemeIcon(savedTheme);
+
         if (!saved) { loadSectionData(); return; }
 
         const data = JSON.parse(saved);
 
-        if (data.theme === 'light') {
-            document.body.classList.remove('dark-mode');
-            document.querySelector('.theme-toggle').innerHTML = "🌙 Dark Mode";
-        } else {
-            document.body.classList.add('dark-mode');
-            document.querySelector('.theme-toggle').innerHTML = "☀️ Light Mode";
-        }
-
         if (data.section) {
             const select = document.getElementById('sectionSelect');
-            if (select.querySelector(`option[value="${data.section}"]`)) {
-                select.value = data.section;
-            }
+            if (select.querySelector(`option[value="${data.section}"]`)) select.value = data.section;
         }
         
         loadSectionData();
@@ -337,11 +400,9 @@
         if (data.targetPct) document.getElementById('targetPct').value = data.targetPct;
 
         if (data.days) {
-            document.getElementById('mon').value = data.days.mon || 0;
-            document.getElementById('tue').value = data.days.tue || 0;
-            document.getElementById('wed').value = data.days.wed || 0;
-            document.getElementById('thu').value = data.days.thu || 0;
-            document.getElementById('fri').value = data.days.fri || 0;
+            ['mon','tue','wed','thu','fri'].forEach(id => {
+                document.getElementById(id).value = data.days[id] || 0;
+            });
         }
 
         if (data.subjects) {
@@ -352,12 +413,8 @@
         }
     }
 
-    function saveAndLoadSection() {
-        loadSectionData();
-        saveData();
-    }
+    function saveAndLoadSection() { loadSectionData(); saveData(); }
 
-    // --- STANDARD FUNCTIONS ---
     function populateSectionSelect() {
         const select = document.getElementById('sectionSelect');
         Object.keys(SECTION_DB).forEach(section => {
@@ -397,14 +454,17 @@
     }
 
     function toggleTheme() {
-        document.body.classList.toggle('dark-mode');
-        const btn = document.querySelector('.theme-toggle');
-        if (document.body.classList.contains('dark-mode')) {
-            btn.innerHTML = "☀️ Light Mode";
-        } else {
-            btn.innerHTML = "🌙 Dark Mode";
-        }
+        const current = document.documentElement.getAttribute("data-theme");
+        const newTheme = current === "light" ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", newTheme);
+        localStorage.setItem("theme", newTheme);
+        updateThemeIcon(newTheme);
         saveData();
+    }
+
+    function updateThemeIcon(theme) {
+        const btn = document.getElementById("theme-icon");
+        btn.innerText = theme === "light" ? "🌙 Dark Mode" : "☀️ Light Mode";
     }
 
     function renderSubjectInputs() {
@@ -455,7 +515,7 @@
 
             let row = `<tr>
                 <td><strong>${sub}</strong></td>
-                <td class="total-col">${total}</td>
+                <td>${total}</td>
                 <td>${currentPct.toFixed(1)}%</td>
                 <td class="${statusClass}">${statusText}</td>
                 <td>${safeBunks}</td>
