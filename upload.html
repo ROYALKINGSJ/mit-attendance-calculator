@@ -8,37 +8,122 @@
     <style>
         /* --- CSS STYLES --- */
         :root {
+            /* Default Dark Mode */
             --primary: #4361ee;
             --bg: #121212;
             --card: #1e1e1e;
             --text: #e0e0e0;
             --border: #333;
             --subtitle: #aaa;
-            --danger: #e63946;
+            --danger: #ff4d4d;
+            --hover-bg: #2d2d2d;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: var(--card); width: 100%; max-width: 500px; padding: 2rem; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+
+        /* Light Mode Variables */
+        [data-theme="light"] {
+            --primary: #3a56d4;
+            --bg: #f4f6f8;
+            --card: #ffffff;
+            --text: #333333;
+            --border: #e0e0e0;
+            --subtitle: #666666;
+            --danger: #dc3545;
+            --hover-bg: #f0f0f0;
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            padding: 20px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container { 
+            background: var(--card); 
+            width: 100%; 
+            max-width: 500px; 
+            padding: 2rem; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            text-align: center; 
+            transition: background 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
         
         h1 { margin: 0 0 10px 0; }
         .subtitle { color: var(--subtitle); font-size: 0.9rem; margin-bottom: 25px; }
         
-        input { width: 100%; padding: 12px; margin: 8px 0; background: #2d2d2d; border: 1px solid var(--border); color: var(--text); border-radius: 8px; box-sizing: border-box; }
+        /* Inputs & Buttons */
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 8px 0; 
+            background: var(--bg); 
+            border: 1px solid var(--border); 
+            color: var(--text); 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+        }
         
-        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: opacity 0.2s; }
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            margin-top: 10px; 
+            transition: opacity 0.2s; 
+        }
         button:hover { opacity: 0.9; }
-        button.secondary { background: var(--border); margin-top: 10px; }
+        button.secondary { background: var(--border); color: var(--text); margin-top: 10px; }
+        button.danger { background: transparent; color: var(--danger); width: auto; padding: 5px 10px; margin: 0; font-size: 1.2rem; }
         
+        /* Toggle Theme Button */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: auto;
+            padding: 0;
+            margin: 0;
+        }
+
         /* App States */
         #auth-view, #app-view { display: none; }
         .visible { display: block !important; }
 
         /* File List */
         .file-list { margin-top: 20px; text-align: left; max-height: 300px; overflow-y: auto; }
-        .file-item { background: #2d2d2d; padding: 10px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
-        .file-link { color: var(--primary); text-decoration: none; word-break: break-all; margin-right: 10px; }
+        .file-item { 
+            background: var(--hover-bg); 
+            padding: 12px; 
+            margin-bottom: 8px; 
+            border-radius: 8px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 0.9rem; 
+            border: 1px solid var(--border);
+        }
+        .file-link { color: var(--primary); text-decoration: none; word-break: break-all; margin-right: 10px; flex-grow: 1; }
+        .file-link:hover { text-decoration: underline; }
         
         /* Loading Bar */
-        #progress-container { width: 100%; background: #333; height: 6px; border-radius: 3px; margin-top: 15px; display: none; }
+        #progress-container { width: 100%; background: var(--border); height: 6px; border-radius: 3px; margin-top: 15px; display: none; }
         #progress-bar { height: 100%; background: var(--primary); width: 0%; border-radius: 3px; transition: width 0.2s; }
         
         .nav-link { color: var(--subtitle); font-size: 0.8rem; display:block; margin-top: 15px; text-decoration: none; }
@@ -48,6 +133,8 @@
 <body>
 
 <div class="container">
+    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">☀️</button>
+
     <div id="auth-view" class="visible">
         <h1>🔐 Student Login</h1>
         <p class="subtitle">Secure temporary storage (24h)</p>
@@ -65,17 +152,17 @@
         <h1>☁️ My Cloud</h1>
         <p class="subtitle" id="user-display"></p>
         
-        <div style="border: 2px dashed var(--border); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+        <div style="border: 2px dashed var(--border); padding: 20px; border-radius: 10px; margin-bottom: 20px; background: var(--bg);">
             <input type="file" id="file-input" style="display:none" onchange="handleFileSelect()">
             <button class="secondary" onclick="document.getElementById('file-input').click()" style="width:auto; margin:0;">Select File (Max 25MB)</button>
-            <p id="selected-file" style="margin: 10px 0 0 0; font-size: 0.9rem; font-style: italic;"></p>
+            <p id="selected-file" style="margin: 10px 0 0 0; font-size: 0.9rem; font-style: italic; color: var(--subtitle);"></p>
             <div id="progress-container"><div id="progress-bar"></div></div>
             <button onclick="uploadFile()" id="upload-btn" style="display:none;">⬆️ Upload Now</button>
         </div>
 
         <h3>My Files</h3>
         <div id="file-list" class="file-list">
-            <div style="text-align:center; color: #666;">Loading files...</div>
+            <div style="text-align:center; color: var(--subtitle);">Loading files...</div>
         </div>
 
         <button class="secondary" onclick="logout()">Log Out</button>
@@ -86,10 +173,10 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getStorage, ref, uploadBytesResumable, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL, listAll, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- YOUR NEW CONFIG ---
+    // --- YOUR FIREBASE CONFIG ---
     const firebaseConfig = {
       apiKey: "AIzaSyDoQiGwshPRK-AJd8u7tPl3CZqb0ILZcpE",
       authDomain: "mit-student-hub-2.firebaseapp.com",
@@ -105,6 +192,20 @@
     const db = getFirestore(app);
 
     const DOMAIN = "@mit.app"; 
+
+    // --- THEME LOGIC ---
+    window.toggleTheme = () => {
+        const current = document.documentElement.getAttribute("data-theme");
+        const newTheme = current === "light" ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", newTheme);
+        document.getElementById("theme-btn").innerText = newTheme === "light" ? "🌙" : "☀️";
+        localStorage.setItem("theme", newTheme);
+    }
+    // Load saved theme
+    if(localStorage.getItem("theme") === "light") {
+        document.documentElement.setAttribute("data-theme", "light");
+        document.getElementById("theme-btn").innerText = "🌙";
+    }
 
     function getEmail(appNum) { return appNum.trim() + DOMAIN; }
     function getAppNum(email) { return email.replace(DOMAIN, ""); }
@@ -172,20 +273,45 @@
         uploadTask.on('state_changed', 
             (snapshot) => { document.getElementById('progress-bar').style.width = (snapshot.bytesTransferred / snapshot.totalBytes) * 100 + '%'; }, 
             (error) => { alert("Upload failed: " + error.message); }, 
-            () => { alert("Upload Successful!"); document.getElementById('progress-container').style.display = 'none'; document.getElementById('upload-btn').style.display = 'none'; selectedFile = null; loadFiles(user.uid); }
+            () => { 
+                alert("Upload Successful!"); 
+                document.getElementById('progress-container').style.display = 'none'; 
+                document.getElementById('upload-btn').style.display = 'none'; 
+                selectedFile = null; 
+                document.getElementById('selected-file').innerText = "";
+                loadFiles(user.uid); 
+            }
         );
     };
+
+    // --- NEW DELETE FUNCTION ---
+    window.deleteFile = async (fileName) => {
+        const user = auth.currentUser;
+        if (!user || !confirm(`Are you sure you want to delete "${fileName}"?`)) return;
+
+        const fileRef = ref(storage, `uploads/${user.uid}/${fileName}`);
+        try {
+            await deleteObject(fileRef);
+            loadFiles(user.uid); // Refresh list
+        } catch (error) {
+            alert("Error deleting file: " + error.message);
+        }
+    }
 
     function loadFiles(uid) {
         const listRef = ref(storage, `uploads/${uid}`);
         const listContainer = document.getElementById('file-list');
-        listContainer.innerHTML = '<div style="text-align:center; color:#666">Loading...</div>';
+        listContainer.innerHTML = '<div style="text-align:center; color:var(--subtitle)">Loading...</div>';
         listAll(listRef).then((res) => {
             listContainer.innerHTML = "";
-            if (res.items.length === 0) { listContainer.innerHTML = '<div style="text-align:center; color:#666">No files yet.</div>'; return; }
+            if (res.items.length === 0) { listContainer.innerHTML = '<div style="text-align:center; color:var(--subtitle)">No files yet.</div>'; return; }
             res.items.forEach((itemRef) => {
                 getDownloadURL(itemRef).then((url) => {
-                    listContainer.innerHTML += `<div class="file-item"><a href="${url}" target="_blank" class="file-link">📄 ${itemRef.name}</a></div>`;
+                    listContainer.innerHTML += `
+                        <div class="file-item">
+                            <a href="${url}" target="_blank" class="file-link">📄 ${itemRef.name}</a>
+                            <button class="danger" onclick="deleteFile('${itemRef.name}')" title="Delete File">🗑️</button>
+                        </div>`;
                 });
             });
         }).catch((error) => { console.error(error); listContainer.innerHTML = '<div style="text-align:center; color:red">Error loading files</div>'; });
