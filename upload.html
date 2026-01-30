@@ -61,7 +61,7 @@
         }
 
         h1 { margin-bottom: 0.5rem; font-size: 1.8rem; }
-        .subtitle { color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem; }
+        .subtitle { color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.9rem; line-height: 1.5; }
 
         /* --- INPUTS & BUTTONS --- */
         input {
@@ -119,16 +119,39 @@
         .stats-container {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 10px;
             font-size: 0.85rem;
             color: var(--text-secondary);
         }
+        
         .limit-badge {
             background: var(--input-bg);
-            padding: 2px 8px;
-            border-radius: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .storage-track {
+            width: 100%;
+            height: 6px;
+            background-color: var(--input-bg);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 20px;
             border: 1px solid var(--border-color);
         }
+        .storage-fill {
+            height: 100%;
+            background-color: var(--success-color);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .storage-fill.warning { background-color: #f59e0b; }
+        .storage-fill.danger { background-color: var(--danger-color); }
+
 
         /* --- FILE LIST --- */
         .upload-area {
@@ -193,7 +216,7 @@
 
     <div id="auth-view">
         <h1>🔐 Student Login</h1>
-        <p class="subtitle">Enter your App Number to access cloud storage.</p>
+        <p class="subtitle">Secure temporary storage (24h)<br>• Max 3 uploads per day •</p>
         
         <input type="text" id="app-num" placeholder="Application Number (e.g. 125xxxxxx)">
         <input type="password" id="password" placeholder="Password">
@@ -209,8 +232,11 @@
         <p class="subtitle" id="user-display">Loading...</p>
 
         <div class="stats-container">
-            <span class="limit-badge" id="daily-limit-text">Uploads Today: Loading...</span>
+            <span class="limit-badge" id="daily-limit-text">Uploads: 0/3</span>
             <span id="storage-text">0 MB / 25 MB</span>
+        </div>
+        <div class="storage-track">
+            <div class="storage-fill" id="storage-fill"></div>
         </div>
 
         <div class="upload-area">
@@ -314,7 +340,7 @@
             document.getElementById('app-view').classList.remove('hidden');
             document.getElementById('user-display').innerText = "Student ID: " + getAppNum(user.email);
             loadFiles(user.uid);
-            checkDailyLimit(user.uid); // Check limit on login
+            checkDailyLimit(user.uid); 
         } else {
             document.getElementById('app-view').classList.add('hidden');
             document.getElementById('auth-view').classList.remove('hidden');
@@ -325,7 +351,7 @@
 
     // --- DAILY LIMIT LOGIC ---
     async function checkDailyLimit(uid) {
-        const todayStr = new Date().toISOString().split('T')[0]; // "2026-01-30"
+        const todayStr = new Date().toISOString().split('T')[0];
         const statsRef = doc(db, "user_stats", uid);
         
         try {
@@ -336,9 +362,7 @@
                 if (data.date === todayStr) {
                     uploadsToday = data.count || 0;
                 } else {
-                    // New day, reset count
-                    uploadsToday = 0;
-                    // We don't write to DB yet, wait for next upload to save write costs
+                    uploadsToday = 0; // New day
                 }
             } else {
                 uploadsToday = 0;
@@ -360,12 +384,13 @@
     function updateStatsUI() {
         const el = document.getElementById('daily-limit-text');
         el.innerText = `Uploads Today: ${uploadsToday} / ${DAILY_UPLOAD_LIMIT}`;
+        
         if (uploadsToday >= DAILY_UPLOAD_LIMIT) {
-            el.style.color = "var(--danger-color)";
             el.style.borderColor = "var(--danger-color)";
+            el.style.color = "var(--danger-color)";
         } else {
-            el.style.color = "var(--text-secondary)";
             el.style.borderColor = "var(--border-color)";
+            el.style.color = "var(--text-color)";
         }
     }
 
@@ -422,7 +447,7 @@
             }, 
             async () => { 
                 // SUCCESS!
-                await incrementDailyCount(user.uid); // Update counter in DB
+                await incrementDailyCount(user.uid); 
                 alert("✅ Upload Successful!"); 
                 resetUploadUI();
                 loadFiles(user.uid); 
@@ -500,7 +525,16 @@
 
     function updateStorageUI() {
         const usedMB = (currentUsedBytes / (1024 * 1024)).toFixed(2);
+        const percent = (currentUsedBytes / MAX_STORAGE_BYTES) * 100;
+        
         document.getElementById('storage-text').innerText = `${usedMB} MB / 25.00 MB`;
+        const fillBar = document.getElementById('storage-fill');
+        
+        fillBar.style.width = Math.min(percent, 100) + "%";
+        
+        fillBar.className = "storage-fill";
+        if(percent > 80) fillBar.classList.add("warning");
+        if(percent >= 100) fillBar.classList.add("danger");
     }
 </script>
 </body>
