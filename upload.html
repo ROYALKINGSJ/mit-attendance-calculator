@@ -307,6 +307,10 @@
         <input type="text" id="app-num" placeholder="Application Number (e.g. 125xxxxxx)">
         <input type="password" id="password" placeholder="Password">
         
+        <div style="text-align: right; margin-bottom: 15px;">
+            <a href="#" onclick="handleForgotPass()" style="color: var(--accent-color); font-size: 0.85rem; text-decoration: none;">Forgot Password?</a>
+        </div>
+        
         <button onclick="login()">Access Cloud</button>
         <button class="secondary" onclick="register()">First Time? Create Account</button>
         <p id="auth-error" class="error-msg"></p>
@@ -432,6 +436,25 @@
 
     window.logout = () => signOut(auth);
     function showError(msg) { document.getElementById('auth-error').innerText = msg; }
+
+    // --- FORGOT PASSWORD LOGIC ---
+    window.handleForgotPass = () => {
+        const appNum = document.getElementById('app-num').value.trim();
+        
+        let message = "Since this system uses student IDs, automatic reset is disabled for security.\n\n";
+        message += "Please contact the Administrator (Sanskar) to request a reset.";
+        
+        if(appNum) {
+            // If they typed an ID, help them draft a message
+            if(confirm(message + "\n\nClick OK to draft a WhatsApp message to Admin.")) {
+                // Pre-fills a message to you
+                const text = encodeURIComponent(`Hey Admin, I forgot the password for Student ID: ${appNum}. Can you reset it?`);
+                window.open(`https://wa.me/?text=${text}`, '_blank');
+            }
+        } else {
+            alert(message);
+        }
+    }
 
     onAuthStateChanged(auth, (user) => {
         if (user) {
