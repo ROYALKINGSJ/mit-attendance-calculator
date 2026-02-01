@@ -280,12 +280,14 @@
         python: [
             {
                 id: "py_week1",
+                visible: true,
                 name: "Week 1",
                 folder: "PYTHON_CODES/WEEK_1",
                 files: ["WEEK_1_1.py", "WEEK_1_2.py", "WEEK_1_3.py", "WEEK_1_4.py", "WEEK_1_5.py"]
             },
             {
                 id: "py_week2",
+                visible: true,
                 name: "Week 2",
                 folder: "PYTHON_CODES/WEEK_2",
                 files: ["WEEK_2_1.py", "WEEK_2_2.py", "WEEK_2_3.py", "WEEK_2_4.py", "WEEK_2_5.py"]
@@ -294,15 +296,73 @@
         java: [
             {
                 id: "java_week1",
+                visible: true,
                 name: "Week 1",
                 folder: "JAVA_CODES/WEEK_1",
                 files: ["WEEK_1_1.java", "WEEK_1_2.java", "WEEK_1_3.java", "WEEK_1_4.java", "WEEK_1_5.java"]
             },
             {
                 id: "java_week2",
+                visible: true,
                 name: "Week 2",
                 folder: "JAVA_CODES/WEEK_2",
                 files: ["WEEK_2_1.java", "WEEK_2_2.java", "WEEK_2_3.java", "WEEK_2_4.java", "WEEK_2_5.java", "WEEK_2_6.java"]
+            },
+            {
+                id: "java_week3",
+                visible: false, // 🔴 SET THIS TO TRUE WHEN READY
+                name: "Week 3",
+                folder: "JAVA_CODES/WEEK_3",
+                files: ["WEEK_3_1.java", "WEEK_3_2.java", "WEEK_3_3.java", "WEEK_3_4.java"]
+            },
+            {
+                id: "java_week4",
+                visible: false, // 🔴 SET THIS TO TRUE WHEN READY
+                name: "Week 4",
+                folder: "JAVA_CODES/WEEK_4",
+                files: ["WEEK_4_1.java", "WEEK_4_2.java", "WEEK_4_3.java", "WEEK_4_4.java"]
+            },
+            {
+                id: "java_week5",
+                visible: false, // 🔴 SET THIS TO TRUE WHEN READY
+                name: "Week 5",
+                folder: "JAVA_CODES/WEEK_5",
+                files: ["WEEK_5_1.java", "WEEK_5_2.java", "WEEK_5_3.java", "WEEK_5_4.java"]
+            },
+            {
+                id: "java_week6",
+                visible: false, // 🔴 SET THIS TO TRUE WHEN READY
+                name: "Week 6",
+                folder: "JAVA_CODES/WEEK_6",
+                files: ["WEEK_6_1.java", "WEEK_6_2.java", "WEEK_6_3.java"]
+            },
+            {
+                id: "java_week7",
+                visible: false, // 🔴 SET THIS TO TRUE WHEN READY
+                name: "Week 7",
+                folder: "JAVA_CODES/WEEK_7",
+                files: ["WEEK_7_1.java", "WEEK_7_2.java", "WEEK_7_3.java", "WEEK_7_4.java"]
+            },
+            {
+                id: "java_week8",
+                visible: false, // 🔴 SET THIS TO TRUE WHEN READY
+                name: "Week 8",
+                folder: "JAVA_CODES/WEEK_8",
+                files: ["WEEK_8_1.java", "WEEK_8_2.java", "WEEK_8_3.java"]
+            },
+            {
+                id: "java_week9",
+                visible: false, // 🔴 SET THIS TO TRUE WHEN READY
+                name: "Week 9",
+                folder: "JAVA_CODES/WEEK_9",
+                files: ["WEEK_9_1.java", "WEEK_9_2.java"]
+            },
+            {
+                id: "java_week10",
+                visible: false, // 🔴 SET THIS TO TRUE WHEN READY
+                name: "Week 10",
+                folder: "JAVA_CODES/WEEK_10",
+                files: ["WEEK_10_1.java", "WEEK_10_2.java", "WEEK_10_3.java"]
             }
         ]
     };
@@ -365,6 +425,9 @@
             }
 
             DATA[lang].forEach(week => {
+                // VISIBILITY CHECK: Skip week if visible is explicitly false
+                if (week.visible === false) return; 
+
                 let fileRowsHTML = "";
                 week.files.forEach(file => {
                     const viewLink = `https://github.com/${REPO_USER}/${REPO_NAME}/blob/${BRANCH}/${week.folder}/${file}`;
