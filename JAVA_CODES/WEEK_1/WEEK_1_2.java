@@ -1,4 +1,3 @@
-package OOPS_LAB;
 import java.util.Scanner;
 
 public class WEEK_1_2 {

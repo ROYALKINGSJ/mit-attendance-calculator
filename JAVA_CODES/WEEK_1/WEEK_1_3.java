@@ -1,5 +1,3 @@
-package OOPS_LAB;
-
 public class WEEK_1_3 {
     int x=10;
     double x = 10.5;
