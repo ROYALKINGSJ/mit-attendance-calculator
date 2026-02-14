@@ -35,10 +35,10 @@ class EMPLOYEE{
             Dept_object[i]=new Department();
 
             System.out.println("Enter Department Name : ");
-            String Dept_Name=sc.nextLine();
+            String Dept_Name=sc.next();
 
             System.out.println("Enter Department Location : ");
-            String Dept_Location=sc.nextLine();
+            String Dept_Location=sc.next();
 
             Dept_object[i].set(Dept_Name, Dept_Location);
         }
@@ -66,7 +66,7 @@ public class WEEK_5_2 {
             Employee_object_array[i]=new EMPLOYEE();
 
             System.out.println("Enter Employee Name : ");
-            Employee_object_array[i].Employee_Name=sc.nextLine();
+            Employee_object_array[i].Employee_Name=sc.next();
 
             System.out.println("Enter Employee Salary : ");
             Employee_object_array[i].Employee_Salary=sc.nextDouble();
