@@ -1,4 +1,3 @@
-package OOPS_LAB.WEEK_5;
 import java.util.Scanner;
 
 class STUDENT{
