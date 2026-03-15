@@ -348,6 +348,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getStorage, ref, uploadBytesResumable, getDownloadURL, listAll, deleteObject, getMetadata } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -363,6 +364,13 @@
     };
 
     const app = initializeApp(firebaseConfig);
+
+    // --- 🛡️ APP CHECK (BOT SHIELD) ---
+    const appCheck = initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider('6LfOW4ssAAAAAElKekfTVUalESAkIafmmHpZ9-o3'),
+      isTokenAutoRefreshEnabled: true
+    });
+
     const auth = getAuth(app);
     const storage = getStorage(app);
     const db = getFirestore(app);
@@ -595,7 +603,13 @@
             alert(`✅ Successfully uploaded ${successfulUploads} file(s)!`); 
             
         } catch (error) {
-            alert("Upload Failed: " + error.message);
+            // Added quota error handling!
+            if (error.code === 'storage/quota-exceeded' || error.message.includes('quota')) {
+                alert("🚨 SERVER DOWN: The daily bandwidth or storage limit has been exhausted. Please try again later!");
+                document.getElementById('upload-btn').innerText = "Database Offline";
+            } else {
+                alert("Upload Failed: " + error.message);
+            }
         } finally {
             resetUploadUI();
             loadFiles(user.uid); 
@@ -670,7 +684,12 @@
 
         } catch (error) {
             console.error(error);
-            listContainer.innerHTML = '<div style="text-align:center; color:var(--danger-color)">Error loading files.</div>';
+            // Added quota error handling!
+            if (error.code === 'storage/quota-exceeded') {
+                listContainer.innerHTML = '<div style="text-align:center; padding: 20px; color:var(--danger-color); font-weight: bold;">🚨 Database Storage is Down (Limit Reached).</div>';
+            } else {
+                listContainer.innerHTML = '<div style="text-align:center; color:var(--danger-color)">Error loading files. Check connection.</div>';
+            }
         }
     }
 </script>
