@@ -73,5 +73,4 @@ functions/node_modules/
 firebase-debug.log
 .DS_Store
 .firebaserc
-
 WEBSITE_MANUAL.key
