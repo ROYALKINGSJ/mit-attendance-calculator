@@ -15,9 +15,9 @@
     <title>Student Cloud Storage</title>
     <link rel="icon" href="https://fav.farm/☁️" />
     <style>
-        /* --- UNIFIED THEME VARIABLES (Matches Index/Code) --- */
+        /* --- UNIFIED THEME VARIABLES --- */
         :root {
-            /* Dark Mode (Default) */
+            var(--bg-color): #0f172a;
             --bg-color: #0f172a;
             --card-bg: #1e293b;
             --text-color: #f1f5f9;
@@ -147,7 +147,7 @@
         .subtitle { text-align: center; color: var(--text-secondary); font-size: 1rem; margin-bottom: 25px; }
 
         /* --- CLOUD SPECIFIC STYLES --- */
-        input {
+        input[type="text"], input[type="password"] {
             width: 100%;
             padding: 12px;
             margin-bottom: 1rem;
@@ -180,38 +180,31 @@
         button.secondary { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-color); }
         button.secondary:hover { background-color: var(--input-bg); }
 
+        /* DUAL PROGRESS BARS */
         .stats-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             font-size: 0.9rem;
             color: var(--text-secondary);
+            font-weight: 500;
         }
         
-        .limit-badge {
-            background: var(--input-bg);
-            padding: 4px 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            font-weight: 500;
-            color: var(--text-color);
-        }
-
         .storage-track {
             width: 100%;
             height: 8px;
             background-color: var(--input-bg);
             border-radius: 4px;
             overflow: hidden;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             border: 1px solid var(--border-color);
         }
         .storage-fill {
             height: 100%;
             background-color: var(--success-color);
             width: 0%;
-            transition: width 0.5s ease;
+            transition: width 0.5s ease, background-color 0.3s;
         }
         .storage-fill.warning { background-color: #f59e0b; }
         .storage-fill.danger { background-color: var(--danger-color); }
@@ -252,7 +245,7 @@
         }
         .file-link:hover { text-decoration: underline; }
 
-        .file-meta { font-size: 0.8rem; color: var(--text-secondary); margin-right: 15px; }
+        .file-meta { font-size: 0.8rem; color: var(--text-secondary); margin-right: 15px; white-space: nowrap; }
 
         button.delete-btn {
             background-color: transparent;
@@ -298,7 +291,7 @@
 
     <div id="auth-view">
         <h1>🔐 Student Login</h1>
-        <p class="subtitle" style="margin-bottom: 10px;">Secure temporary storage (24h)<br>• Max 3 uploads per day •</p>
+        <p class="subtitle" style="margin-bottom: 10px;">Secure temporary storage (24h)<br>• Max 3 uploads per day (3MB Limit) •</p>
         
         <p style="color: var(--danger-color); font-size: 0.9rem; font-weight: 600; margin-bottom: 25px;">
             ⚠️ Available only for F Section Students
@@ -321,25 +314,33 @@
         <p class="subtitle" id="user-display">Loading...</p>
 
         <div class="stats-container">
-            <span class="limit-badge" id="daily-limit-text">Uploads: 0/3</span>
-            <span id="storage-text">0 MB / 25 MB</span>
+            <span>Daily Uploads</span>
+            <span id="daily-limit-text">0 / 3 Files</span>
+        </div>
+        <div class="storage-track">
+            <div class="storage-fill" id="count-fill"></div>
+        </div>
+
+        <div class="stats-container">
+            <span>Storage Used</span>
+            <span id="storage-text">0.00 MB / 3.00 MB</span>
         </div>
         <div class="storage-track">
             <div class="storage-fill" id="storage-fill"></div>
         </div>
 
         <div class="upload-area">
-            <input type="file" id="file-input" style="display:none" onchange="handleFileSelect()">
-            <button class="secondary" onclick="document.getElementById('file-input').click()" style="width:auto; margin:0;">📂 Select File</button>
-            <p id="selected-file" style="margin: 15px 0 0 0; font-size: 0.9rem; font-style: italic; color: var(--text-secondary);"></p>
+            <input type="file" id="file-input" style="display:none" multiple onchange="handleFileSelect()">
+            <button class="secondary" onclick="document.getElementById('file-input').click()" style="width:auto; margin:0;">📂 Select File(s)</button>
+            <p id="selected-file" style="margin: 15px 0 0 0; font-size: 0.9rem; font-style: italic; color: var(--text-secondary); line-height: 1.4;"></p>
             
             <div id="progress-container"><div id="progress-bar"></div></div>
-            <button onclick="uploadFile()" id="upload-btn" class="hidden" style="margin-top: 20px;">⬆️ Upload to Cloud</button>
+            <button onclick="uploadFiles()" id="upload-btn" class="hidden" style="margin-top: 20px;">⬆️ Upload to Cloud</button>
         </div>
 
         <h3 style="text-align: left; margin-bottom: 10px; color: var(--text-color);">My Files</h3>
         <div id="file-list" class="file-list">
-            </div>
+        </div>
 
         <button class="secondary" onclick="logout()" style="margin-top: 2rem;">Log Out</button>
     </div>
@@ -367,8 +368,8 @@
     const db = getFirestore(app);
     const DOMAIN = "@mit.app"; 
 
-    // --- CONSTANTS ---
-    const MAX_STORAGE_BYTES = 25 * 1024 * 1024; // 25 MB
+    // --- NEW LIMITS ---
+    const MAX_STORAGE_BYTES = 3 * 1024 * 1024; // 3 MB
     const DAILY_UPLOAD_LIMIT = 3;
     let currentUsedBytes = 0;
     let uploadsToday = 0;
@@ -437,18 +438,14 @@
     window.logout = () => signOut(auth);
     function showError(msg) { document.getElementById('auth-error').innerText = msg; }
 
-    // --- FORGOT PASSWORD LOGIC ---
     window.handleForgotPass = () => {
         const appNum = document.getElementById('app-num').value.trim();
-        
         let message = "Since this system uses student IDs, automatic reset is disabled for security.\n\n";
         message += "Please contact the Administrator (Sanskar Jaiswal) to request a reset.\n\n";
         message += "Email ID : technologiccompany.sanskar@gmail.com";
         
         if(appNum) {
-            // If they typed an ID, help them draft a message
             if(confirm(message + "\n\nClick OK to draft a WhatsApp message to Admin.")) {
-                // Pre-fills a message to you
                 const text = encodeURIComponent(`Hey Admin, I forgot the password for Student ID: ${appNum}. Can you reset it?`);
                 window.open(`https://wa.me/?text=${text}`, '_blank');
             }
@@ -469,117 +466,144 @@
             document.getElementById('auth-view').classList.remove('hidden');
             document.getElementById('file-list').innerHTML = "";
             currentUsedBytes = 0;
+            uploadsToday = 0;
         }
     });
 
-    // --- DAILY LIMIT LOGIC ---
+    // --- DAILY LIMIT & STATS LOGIC ---
     async function checkDailyLimit(uid) {
         const todayStr = new Date().toISOString().split('T')[0];
         const statsRef = doc(db, "user_stats", uid);
         
         try {
             const docSnap = await getDoc(statsRef);
-            
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                if (data.date === todayStr) {
-                    uploadsToday = data.count || 0;
-                } else {
-                    uploadsToday = 0; // New day
-                }
+                uploadsToday = (data.date === todayStr) ? (data.count || 0) : 0;
             } else {
                 uploadsToday = 0;
             }
-            updateStatsUI();
+            updateCountUI();
         } catch (error) {
             console.error("Error fetching stats:", error);
         }
     }
 
-    async function incrementDailyCount(uid) {
+    async function incrementDailyCount(uid, addedCount) {
         const todayStr = new Date().toISOString().split('T')[0];
         const statsRef = doc(db, "user_stats", uid);
-        uploadsToday++;
+        uploadsToday += addedCount;
         await setDoc(statsRef, { date: todayStr, count: uploadsToday });
-        updateStatsUI();
+        updateCountUI();
     }
 
-    function updateStatsUI() {
-        const el = document.getElementById('daily-limit-text');
-        el.innerText = `Uploads: ${uploadsToday}/${DAILY_UPLOAD_LIMIT}`;
+    function updateCountUI() {
+        document.getElementById('daily-limit-text').innerText = `${uploadsToday} / ${DAILY_UPLOAD_LIMIT} Files`;
+        const countPercent = (uploadsToday / DAILY_UPLOAD_LIMIT) * 100;
+        const countFill = document.getElementById('count-fill');
         
-        if (uploadsToday >= DAILY_UPLOAD_LIMIT) {
-            el.style.borderColor = "var(--danger-color)";
-            el.style.color = "var(--danger-color)";
-        } else {
-            el.style.borderColor = "var(--border-color)";
-            el.style.color = "var(--text-color)";
-        }
+        countFill.style.width = Math.min(countPercent, 100) + "%";
+        countFill.className = "storage-fill";
+        if (countPercent >= 100) countFill.classList.add("danger");
+        else if (countPercent >= 66) countFill.classList.add("warning");
     }
 
-    // --- STORAGE LOGIC ---
-    let selectedFile = null;
+    function updateStorageUI() {
+        const usedMB = (currentUsedBytes / (1024 * 1024)).toFixed(2);
+        const limitMB = (MAX_STORAGE_BYTES / (1024 * 1024)).toFixed(2);
+        const percent = (currentUsedBytes / MAX_STORAGE_BYTES) * 100;
+        
+        document.getElementById('storage-text').innerText = `${usedMB} MB / ${limitMB} MB`;
+        const fillBar = document.getElementById('storage-fill');
+        
+        fillBar.style.width = Math.min(percent, 100) + "%";
+        fillBar.className = "storage-fill";
+        if(percent > 80) fillBar.classList.add("warning");
+        if(percent >= 100) fillBar.classList.add("danger");
+    }
+
+    // --- STORAGE & BATCH UPLOAD LOGIC ---
+    let selectedFilesArray = [];
     
     window.handleFileSelect = () => {
-        const file = document.getElementById('file-input').files[0];
-        if (!file) return;
+        const files = Array.from(document.getElementById('file-input').files);
+        if (files.length === 0) return;
 
-        // 1. CHECK DAILY LIMIT
-        if (uploadsToday >= DAILY_UPLOAD_LIMIT) {
-            alert(`⛔ Daily Limit Reached!\n\nYou have already uploaded ${DAILY_UPLOAD_LIMIT} files today.\nPlease come back tomorrow.`);
+        // 1. Check Batch Upload Limit
+        if (uploadsToday + files.length > DAILY_UPLOAD_LIMIT) {
+            const allowed = DAILY_UPLOAD_LIMIT - uploadsToday;
+            alert(`⛔ Daily Limit Exceeded!\nYou only have ${allowed} upload(s) remaining for today, but you selected ${files.length} file(s).`);
             document.getElementById('file-input').value = ""; 
             return;
         }
         
-        // 2. CHECK STORAGE LIMIT
-        const expectedTotal = currentUsedBytes + file.size;
-        if (expectedTotal > MAX_STORAGE_BYTES) {
-            alert(`⚠️ Not enough space! Limit is 25MB.`);
+        // 2. Check Combined Storage Limit
+        const totalNewBytes = files.reduce((acc, file) => acc + file.size, 0);
+        if (currentUsedBytes + totalNewBytes > MAX_STORAGE_BYTES) {
+            const attemptedMB = (totalNewBytes / (1024 * 1024)).toFixed(2);
+            alert(`⚠️ Not enough space!\nYou are trying to add ${attemptedMB} MB, which exceeds your 3 MB total limit.`);
             document.getElementById('file-input').value = ""; 
             return;
         }
         
-        selectedFile = file;
-        document.getElementById('selected-file').innerText = "Selected: " + file.name + ` (${(file.size/1024/1024).toFixed(2)} MB)`;
+        selectedFilesArray = files;
+        
+        // Generate a nice text string showing all files
+        let fileNames = files.map(f => f.name).join(', ');
+        if(fileNames.length > 50) fileNames = fileNames.substring(0, 47) + '...';
+        
+        document.getElementById('selected-file').innerText = `Selected ${files.length} file(s): ${fileNames} (${(totalNewBytes/1024/1024).toFixed(2)} MB)`;
         document.getElementById('upload-btn').classList.remove('hidden');
     }
 
-    window.uploadFile = () => {
-        if (!selectedFile) return;
+    window.uploadFiles = async () => {
+        if (selectedFilesArray.length === 0) return;
         const user = auth.currentUser;
         if (!user) return;
-
-        // Double check limits
-        if (uploadsToday >= DAILY_UPLOAD_LIMIT) { alert("⛔ Daily limit reached."); return; }
-        if (currentUsedBytes + selectedFile.size > MAX_STORAGE_BYTES) { alert("⛔ Storage limit reached."); return; }
-
-        const storageRef = ref(storage, `uploads/${user.uid}/${selectedFile.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
         document.getElementById('progress-container').style.display = 'block';
         document.getElementById('upload-btn').disabled = true;
 
-        uploadTask.on('state_changed', 
-            (snapshot) => { 
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                document.getElementById('progress-bar').style.width = progress + '%'; 
-            }, 
-            (error) => { 
-                alert("Upload Failed: " + error.message);
-                resetUploadUI();
-            }, 
-            async () => { 
-                // SUCCESS!
-                await incrementDailyCount(user.uid); 
-                alert("✅ Upload Successful!"); 
-                resetUploadUI();
-                loadFiles(user.uid); 
+        let successfulUploads = 0;
+
+        try {
+            // Upload sequentially to calculate an overall progress bar
+            for (let i = 0; i < selectedFilesArray.length; i++) {
+                const file = selectedFilesArray[i];
+                const storageRef = ref(storage, `uploads/${user.uid}/${file.name}`);
+                const uploadTask = uploadBytesResumable(storageRef, file);
+
+                await new Promise((resolve, reject) => {
+                    uploadTask.on('state_changed', 
+                        (snapshot) => { 
+                            const fileProgress = (snapshot.bytesTransferred / snapshot.totalBytes);
+                            // Combine progress of current file + previously completed files
+                            const overallProgress = ((i + fileProgress) / selectedFilesArray.length) * 100;
+                            document.getElementById('progress-bar').style.width = overallProgress + '%'; 
+                        }, 
+                        (error) => reject(error), 
+                        () => {
+                            successfulUploads++;
+                            resolve();
+                        }
+                    );
+                });
             }
-        );
+
+            // SUCCESS!
+            await incrementDailyCount(user.uid, successfulUploads); 
+            alert(`✅ Successfully uploaded ${successfulUploads} file(s)!`); 
+            
+        } catch (error) {
+            alert("Upload Failed: " + error.message);
+        } finally {
+            resetUploadUI();
+            loadFiles(user.uid); 
+        }
     };
 
     function resetUploadUI() {
-        selectedFile = null;
+        selectedFilesArray = [];
         document.getElementById('file-input').value = "";
         document.getElementById('selected-file').innerText = "";
         document.getElementById('upload-btn').classList.add('hidden');
@@ -629,12 +653,16 @@
             }
 
             files.forEach(file => {
-                const sizeMB = (Number(file.meta.size) / (1024 * 1024)).toFixed(2);
+                let sizeText = (Number(file.meta.size) / (1024 * 1024)).toFixed(2) + " MB";
+                if (file.meta.size < 1024 * 1024) {
+                    sizeText = (Number(file.meta.size) / 1024).toFixed(1) + " KB";
+                }
+
                 listContainer.innerHTML += `
                     <div class="file-item">
                         <div style="flex-grow:1; display:flex; align-items:center;">
                             <a href="${file.url}" target="_blank" class="file-link">📄 ${file.ref.name}</a>
-                            <span class="file-meta">(${sizeMB} MB)</span>
+                            <span class="file-meta">(${sizeText})</span>
                         </div>
                         <button class="delete-btn" onclick="deleteFile('${file.ref.name}')" title="Delete">🗑️</button>
                     </div>`;
@@ -644,20 +672,6 @@
             console.error(error);
             listContainer.innerHTML = '<div style="text-align:center; color:var(--danger-color)">Error loading files.</div>';
         }
-    }
-
-    function updateStorageUI() {
-        const usedMB = (currentUsedBytes / (1024 * 1024)).toFixed(2);
-        const percent = (currentUsedBytes / MAX_STORAGE_BYTES) * 100;
-        
-        document.getElementById('storage-text').innerText = `${usedMB} MB / 25.00 MB`;
-        const fillBar = document.getElementById('storage-fill');
-        
-        fillBar.style.width = Math.min(percent, 100) + "%";
-        
-        fillBar.className = "storage-fill";
-        if(percent > 80) fillBar.classList.add("warning");
-        if(percent >= 100) fillBar.classList.add("danger");
     }
 </script>
 </body>
