@@ -4,6 +4,10 @@ import java.util.Scanner;
 class EMPLOYEE{
     String Ename;
 
+    EMPLOYEE(String Ename){
+        this.Ename=Ename;
+    }
+
     void formatEmployeeName(){
         String temp="";
         String[] words_array=Ename.split(" +");
@@ -45,14 +49,20 @@ public class WEEK_6_2 {
     public static void main(String[] args) {
         Scanner sc=new Scanner(System.in);
 
-        EMPLOYEE objector=new EMPLOYEE();
+        System.out.println("Enter Number of Employees : ");
+        int n=sc.nextInt();
+        sc.nextLine();
 
-        System.out.println("Enter Employee Name : ");
-        objector.Ename=sc.nextLine();
+        EMPLOYEE[] objector=new EMPLOYEE[n];
 
-        objector.formatEmployeeName();
-        objector.generateEmail();
-    
+        for (int i=0;i<n;i++){
+            System.out.println("Enter Employee Name : ");
+            String Ename=sc.nextLine();
+            objector[i]=new EMPLOYEE(Ename);
+
+            objector[i].formatEmployeeName();
+            objector[i].generateEmail();
+        }
         sc.close();
     }
 }
