@@ -9,24 +9,21 @@
     
     <style>
         :root {
-            /* We use CSS Variables here. 
-               The '--dynamic-hue' is constantly changed by our JavaScript! 
-               Purple is around 280, Blue is around 200.
-            */
+            /* This hue is now driven by the average color of the chaotic background! */
             --dynamic-hue: 275; 
             
-            /* DARK THEME (Default) */
-            --bg-deep: #05020a;
-            --bg-panel: rgba(18, 10, 38, 0.45);
-            --text-main: #e2e8f0;
-            --text-muted: #8b82a5;
-            --led-bg: rgba(2, 1, 5, 0.85);
-            --glass-border: rgba(255, 255, 255, 0.05);
+            /* DARK THEME */
+            --bg-deep: #030108;
+            --bg-panel: rgba(10, 5, 20, 0.4);
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --led-bg: rgba(3, 1, 8, 0.85);
             
-            /* Dynamic Glowing Accents based on the JS Hue */
+            /* Dynamic UI Glows */
             --accent-glow: hsla(var(--dynamic-hue), 100%, 60%, 1);
             --accent-dim: hsla(var(--dynamic-hue), 100%, 60%, 0.15);
-            --accent-border: hsla(var(--dynamic-hue), 100%, 60%, 0.4);
+            --accent-border: hsla(var(--dynamic-hue), 100%, 60%, 0.5);
             
             --font-ui: 'Rajdhani', sans-serif;
             --font-code: 'JetBrains Mono', monospace;
@@ -34,17 +31,17 @@
 
         /* LIGHT THEME OVERRIDES */
         [data-theme="light"] {
-            --bg-deep: #f1f5f9;
+            --bg-deep: #f8fafc;
             --bg-panel: rgba(255, 255, 255, 0.6);
             --text-main: #0f172a;
             --text-muted: #475569;
-            --led-bg: rgba(241, 245, 249, 0.85);
             --glass-border: rgba(0, 0, 0, 0.1);
+            --led-bg: rgba(248, 250, 252, 0.85);
             
-            /* Very dark, bold accents for light mode */
-            --accent-glow: hsla(var(--dynamic-hue), 90%, 25%, 1);
-            --accent-dim: hsla(var(--dynamic-hue), 90%, 25%, 0.1);
-            --accent-border: hsla(var(--dynamic-hue), 90%, 25%, 0.4);
+            /* Dark, intense accents for light mode */
+            --accent-glow: hsla(var(--dynamic-hue), 90%, 30%, 1);
+            --accent-dim: hsla(var(--dynamic-hue), 90%, 30%, 0.1);
+            --accent-border: hsla(var(--dynamic-hue), 90%, 30%, 0.5);
         }
 
         body {
@@ -61,19 +58,41 @@
             transition: background-color 0.5s, color 0.5s;
         }
 
+        /* --- GENERATIVE ABSTRACT BACKGROUND --- */
+        #bgCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: -2;
+        }
+
+        /* Grid Overlay to give it that tech/HUD feel */
+        .bg-grid-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+            background: 
+                linear-gradient(var(--glass-border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--glass-border) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.3;
+        }
+
         /* Top Navigation */
         .top-nav {
             position: absolute;
-            top: 20px;
+            top: 25px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             gap: 20px;
             background: var(--bg-panel);
             border: 1px solid var(--glass-border);
-            padding: 10px 30px;
-            border-radius: 30px;
-            backdrop-filter: blur(10px);
+            padding: 12px 35px;
+            border-radius: 40px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             z-index: 100;
             transition: all 0.5s;
         }
@@ -82,8 +101,8 @@
             color: var(--text-muted);
             background: none;
             border: none;
-            font-weight: 600;
-            letter-spacing: 1px;
+            font-weight: 700;
+            letter-spacing: 2px;
             text-transform: uppercase;
             font-size: 0.9rem;
             cursor: pointer;
@@ -93,121 +112,91 @@
 
         .top-nav button:hover {
             color: var(--accent-glow);
-            text-shadow: 0 0 8px var(--accent-glow);
-        }
-
-        /* --- DYNAMIC ABSTRACT PLASMA BACKGROUND --- */
-        .plasma-bg {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: -1;
-            overflow: hidden;
-            background: 
-                linear-gradient(var(--accent-dim) 1px, transparent 1px),
-                linear-gradient(90deg, var(--accent-dim) 1px, transparent 1px);
-            background-size: 40px 40px;
-            transition: background 0.5s;
-        }
-
-        .orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(120px);
-            opacity: 0.6;
-            animation: floatOrb 25s infinite alternate ease-in-out;
-            background: var(--accent-glow);
-            transition: background 0.5s;
-        }
-
-        .orb-1 { width: 45vw; height: 45vw; top: -10%; left: -10%; }
-        .orb-2 { width: 35vw; height: 35vw; bottom: -10%; right: -5%; animation-delay: -12s; animation-duration: 30s; filter: blur(90px); }
-
-        @keyframes floatOrb {
-            0% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(10vw, 15vh) scale(1.1); }
-            100% { transform: translate(20vw, -10vh) scale(0.9); }
+            text-shadow: 0 0 10px var(--accent-glow);
         }
 
         /* --- GLASSMORPHIC CONTAINER --- */
         .main-wrapper {
             max-width: 1300px;
-            margin: 80px auto 40px auto;
-            width: 90%;
+            margin: 100px auto 40px auto;
+            width: 92%;
             display: grid;
             grid-template-columns: 350px 1fr;
-            gap: 30px;
+            gap: 35px;
             flex-grow: 1;
             z-index: 10;
         }
 
         .glass-panel {
             background: var(--bg-panel);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 40px;
             position: relative;
             overflow: hidden;
             transition: all 0.5s ease;
         }
 
         .glass-panel:hover {
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 0 20px var(--accent-dim);
             border-color: var(--accent-border);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4), inset 0 0 30px var(--accent-dim);
         }
 
         /* --- LEFT PANEL: IDENTITY --- */
         .identity-col { display: flex; flex-direction: column; }
 
         .avatar-container {
-            width: 120px;
-            height: 120px;
-            border-radius: 12px;
+            width: 130px;
+            height: 130px;
+            border-radius: 16px;
             background: var(--accent-glow);
             margin-bottom: 25px;
-            padding: 3px;
-            box-shadow: 0 0 25px var(--accent-dim);
-            transition: background 0.5s, box-shadow 0.5s;
+            padding: 4px;
+            box-shadow: 0 0 30px var(--accent-dim);
+            transition: background 0.3s, box-shadow 0.3s;
         }
 
-        .avatar-inner {
-            width: 100%; height: 100%;
-            background-color: var(--bg-deep);
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 3rem;
-            transition: background-color 0.5s;
+        /* Custom Profile Picture Image */
+        .profile-pic {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            background-color: var(--bg-deep); /* Fallback */
         }
 
         h1.name {
-            font-size: 2.5rem; margin: 0; line-height: 1.1; letter-spacing: 1px;
+            font-size: 2.8rem; margin: 0; line-height: 1.1; letter-spacing: 1px;
             color: var(--text-main);
         }
 
         .title {
             color: var(--accent-glow);
             font-family: var(--font-code);
-            font-size: 0.9rem; margin-top: 10px; letter-spacing: 2px;
+            font-size: 0.95rem; margin-top: 12px; letter-spacing: 3px;
             text-transform: uppercase;
+            text-shadow: 0 0 15px var(--accent-dim);
+            transition: color 0.3s, text-shadow 0.3s;
         }
 
         .bio {
             color: var(--text-muted);
-            font-size: 1.05rem; margin-top: 25px; line-height: 1.6;
+            font-size: 1.1rem; margin-top: 25px; line-height: 1.6;
         }
 
         /* Comms Grid */
         .comms-grid {
             margin-top: auto; padding-top: 40px;
-            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
         }
 
         .comm-btn {
             background: var(--glass-border);
             border: 1px solid var(--glass-border);
-            border-radius: 8px; padding: 12px;
+            border-radius: 10px; padding: 12px;
             color: var(--text-main); text-decoration: none;
             display: flex; align-items: center; gap: 10px;
             font-size: 0.85rem; font-family: var(--font-code);
@@ -217,12 +206,13 @@
         .comm-btn:hover {
             background: var(--accent-dim);
             border-color: var(--accent-glow);
-            transform: translateY(-3px);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px var(--accent-dim);
         }
 
         .comm-btn img {
             width: 18px; height: 18px;
-            filter: invert(1); opacity: 0.8;
+            filter: invert(1); opacity: 0.9;
             transition: filter 0.5s;
         }
         
@@ -232,8 +222,8 @@
         .content-col { display: flex; flex-direction: column; gap: 40px; }
 
         .section-header {
-            font-size: 1.3rem; letter-spacing: 3px; text-transform: uppercase;
-            color: var(--text-main); margin-bottom: 20px;
+            font-size: 1.4rem; letter-spacing: 4px; text-transform: uppercase;
+            color: var(--text-main); margin-bottom: 25px;
             display: flex; align-items: center; gap: 15px;
         }
 
@@ -241,31 +231,32 @@
             content: ''; flex-grow: 1; height: 1px; background: var(--glass-border);
         }
 
-        .skills-container { display: flex; flex-wrap: wrap; gap: 10px; }
+        .skills-container { display: flex; flex-wrap: wrap; gap: 12px; }
 
         .skill-node {
             background: var(--glass-border);
             border: 1px solid var(--glass-border);
             color: var(--text-main);
-            padding: 8px 16px; border-radius: 4px;
-            font-family: var(--font-code); font-size: 0.85rem;
+            padding: 10px 18px; border-radius: 6px;
+            font-family: var(--font-code); font-size: 0.9rem;
             transition: all 0.3s ease;
         }
 
         .skill-node:hover {
             border-color: var(--accent-glow);
-            box-shadow: 0 0 15px var(--accent-dim);
+            box-shadow: 0 0 20px var(--accent-dim);
             background: var(--accent-dim);
+            transform: translateY(-2px);
         }
 
         .projects-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;
         }
 
         .project-card {
             background: var(--glass-border);
             border: 1px solid var(--glass-border);
-            border-radius: 12px; padding: 20px;
+            border-radius: 14px; padding: 25px;
             text-decoration: none; color: inherit;
             transition: all 0.3s ease;
             display: flex; flex-direction: column;
@@ -274,35 +265,38 @@
         .project-card:hover {
             border-color: var(--accent-glow);
             background: var(--accent-dim);
-            transform: translateY(-5px);
+            transform: translateY(-6px);
+            box-shadow: 0 10px 30px var(--accent-dim);
         }
 
-        .proj-title { font-size: 1.3rem; font-weight: 700; margin: 0 0 10px 0; }
-        .proj-desc { font-size: 0.95rem; color: var(--text-muted); margin: 0 0 20px 0; line-height: 1.5; flex-grow: 1; }
+        .proj-title { font-size: 1.4rem; font-weight: 700; margin: 0 0 12px 0; }
+        .proj-desc { font-size: 1rem; color: var(--text-muted); margin: 0 0 25px 0; line-height: 1.5; flex-grow: 1; }
 
         .proj-meta {
             display: flex; justify-content: space-between; align-items: center;
-            border-top: 1px solid var(--glass-border); padding-top: 12px;
-            font-family: var(--font-code); font-size: 0.75rem;
+            border-top: 1px solid var(--glass-border); padding-top: 15px;
+            font-family: var(--font-code); font-size: 0.8rem;
         }
 
         .proj-status {
-            color: var(--accent-glow); display: flex; align-items: center; gap: 6px; font-weight: bold;
+            color: var(--accent-glow); display: flex; align-items: center; gap: 8px; font-weight: bold;
+            transition: color 0.3s;
         }
         
         .proj-status::before {
-            content: ''; width: 6px; height: 6px; border-radius: 50%;
-            background: var(--accent-glow); box-shadow: 0 0 8px var(--accent-glow);
+            content: ''; width: 8px; height: 8px; border-radius: 50%;
+            background: var(--accent-glow); box-shadow: 0 0 10px var(--accent-glow);
+            transition: background 0.3s, box-shadow 0.3s;
         }
 
         /* --- THE GLITCHING LED MATRIX (CANVAS) --- */
         .led-wrapper {
-            width: 100%; height: 180px;
+            width: 100%; height: 200px;
             background: var(--led-bg);
             border-top: 2px solid var(--accent-border);
             margin-top: auto; position: relative;
             display: flex; justify-content: center; align-items: center;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
             transition: background 0.5s, border-color 0.5s;
         }
 
@@ -313,10 +307,8 @@
 </head>
 <body>
 
-    <div class="plasma-bg">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-    </div>
+    <canvas id="bgCanvas"></canvas>
+    <div class="bg-grid-overlay"></div>
 
     <div class="top-nav">
         <button id="theme-toggle" onclick="toggleTheme()">☀️ LIGHT MODE</button>
@@ -326,7 +318,7 @@
         
         <div class="glass-panel identity-col">
             <div class="avatar-container">
-                <div class="avatar-inner">👾</div>
+                <img src="https://lh3.googleusercontent.com/a/ACg8ocKFA-dP9EbnH6eCuI2aiwCqBVqNmlQ_XFYmZFeR1BtWAtrrW3U=s576-c-no" alt="Sanskar Jaiswal" class="profile-pic">
             </div>
             
             <h1 class="name">Sanskar<br>Jaiswal</h1>
@@ -360,52 +352,7 @@
 
     <script>
         // ==========================================
-        // 1. THE CHROMA-SHIFT ENGINE (DYNAMIC COLORS)
-        // ==========================================
-        let currentHue = 275; // Starts at Purple
-        let hueDirection = -0.05; // Negative goes towards blue (200)
-
-        function updateColorTheme() {
-            currentHue += hueDirection;
-            
-            // Ping-pong smoothly between Blue (200) and Purple (280)
-            if (currentHue <= 200 || currentHue >= 280) {
-                hueDirection *= -1; 
-            }
-            
-            // Push the new color to the CSS Variables
-            document.documentElement.style.setProperty('--dynamic-hue', currentHue);
-            
-            // Keep looping forever at 60 frames per second
-            requestAnimationFrame(updateColorTheme);
-        }
-        
-        // Start the engine!
-        updateColorTheme();
-
-
-        // ==========================================
-        // 2. LIGHT / DARK MODE TOGGLE
-        // ==========================================
-        const savedTheme = localStorage.getItem("portfolio-theme") || "dark";
-        document.documentElement.setAttribute("data-theme", savedTheme);
-        updateThemeBtn(savedTheme);
-
-        function toggleTheme() {
-            const current = document.documentElement.getAttribute("data-theme");
-            const newTheme = current === "light" ? "dark" : "light";
-            document.documentElement.setAttribute("data-theme", newTheme);
-            localStorage.setItem("portfolio-theme", newTheme);
-            updateThemeBtn(newTheme);
-        }
-
-        function updateThemeBtn(theme) {
-            document.getElementById("theme-toggle").innerText = theme === "light" ? "🌙 DARK MODE" : "☀️ LIGHT MODE";
-        }
-
-
-        // ==========================================
-        // 3. DYNAMIC DATA CONFIGURATION
+        // 1. DYNAMIC DATA CONFIGURATION
         // ==========================================
         const COMMUNICATIONS = [
             { name: "GitHub", url: "https://github.com/ROYALKINGSJ", icon: "https://cdn-icons-png.flaticon.com/512/733/733553.png" },
@@ -466,25 +413,161 @@
             `;
         });
 
+
+        // ==========================================
+        // 2. LIGHT / DARK MODE TOGGLE
+        // ==========================================
+        const savedTheme = localStorage.getItem("portfolio-theme") || "dark";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+        updateThemeBtn(savedTheme);
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute("data-theme");
+            const newTheme = current === "light" ? "dark" : "light";
+            document.documentElement.setAttribute("data-theme", newTheme);
+            localStorage.setItem("portfolio-theme", newTheme);
+            updateThemeBtn(newTheme);
+        }
+
+        function updateThemeBtn(theme) {
+            document.getElementById("theme-toggle").innerText = theme === "light" ? "🌙 DARK MODE" : "☀️ LIGHT MODE";
+        }
+
+
+        // ==========================================
+        // 3. GENERATIVE ABSTRACT BACKGROUND (CANVAS)
+        // ==========================================
+        const bgCanvas = document.getElementById('bgCanvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let orbs = [];
+        let globalHue = 275; // Global hue used to sync the UI
+
+        class Orb {
+            constructor(canvasWidth, canvasHeight) {
+                this.x = Math.random() * canvasWidth;
+                this.y = Math.random() * canvasHeight;
+                // Random velocity
+                this.vx = (Math.random() - 0.5) * 1.5;
+                this.vy = (Math.random() - 0.5) * 1.5;
+                // Massive sizes for smooth gradients
+                this.radius = Math.random() * 300 + 400; 
+                // Start around purple/blue spectrum
+                this.hue = Math.random() * 100 + 200; 
+                this.hueSpeed = (Math.random() - 0.5) * 0.5;
+                
+                // Brightness flickering logic
+                this.baseAlpha = Math.random() * 0.4 + 0.3;
+                this.currentAlpha = this.baseAlpha;
+                this.targetAlpha = this.baseAlpha;
+            }
+
+            update(canvasWidth, canvasHeight) {
+                // Move
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Bounce off walls smoothly
+                if (this.x < -this.radius || this.x > canvasWidth + this.radius) this.vx *= -1;
+                if (this.y < -this.radius || this.y > canvasHeight + this.radius) this.vy *= -1;
+
+                // Shift color organically
+                this.hue += this.hueSpeed;
+                if (this.hue > 360) this.hue = 0;
+                if (this.hue < 0) this.hue = 360;
+
+                // Randomly surge brightness to simulate electrical flicker
+                if (Math.random() < 0.02) {
+                    this.targetAlpha = Math.random() * 0.8 + 0.2; // Surge
+                } else if (Math.random() < 0.05) {
+                    this.targetAlpha = this.baseAlpha; // Return to normal
+                }
+                
+                // Ease alpha towards target
+                this.currentAlpha += (this.targetAlpha - this.currentAlpha) * 0.05;
+            }
+
+            draw(ctx, isLightMode) {
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+                
+                // In light mode, we use darker, more saturated colors for the abstract blobs
+                const saturation = isLightMode ? '90%' : '100%';
+                const lightness = isLightMode ? '30%' : '50%';
+                
+                gradient.addColorStop(0, `hsla(${this.hue}, ${saturation}, ${lightness}, ${this.currentAlpha})`);
+                gradient.addColorStop(1, `hsla(${this.hue}, ${saturation}, ${lightness}, 0)`);
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initBgCanvas() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+            
+            // Create 4-5 large orbs
+            orbs = [];
+            const orbCount = window.innerWidth < 800 ? 3 : 5;
+            for (let i = 0; i < orbCount; i++) {
+                orbs.push(new Orb(bgCanvas.width, bgCanvas.height));
+            }
+        }
+
+        function animateBgCanvas() {
+            // Clear canvas
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            
+            const isLightMode = document.documentElement.getAttribute('data-theme') === 'light';
+            
+            // Blend modes to make the colors mix together organically
+            bgCtx.globalCompositeOperation = isLightMode ? 'multiply' : 'screen';
+
+            let avgHue = 0;
+
+            for (let i = 0; i < orbs.length; i++) {
+                orbs[i].update(bgCanvas.width, bgCanvas.height);
+                orbs[i].draw(bgCtx, isLightMode);
+                avgHue += orbs[i].hue;
+            }
+            
+            // Sync the UI CSS Variables to the average color of the moving orbs!
+            globalHue = avgHue / orbs.length;
+            document.documentElement.style.setProperty('--dynamic-hue', globalHue);
+
+            bgCtx.globalCompositeOperation = 'source-over'; // Reset
+            requestAnimationFrame(animateBgCanvas);
+        }
+
+        window.addEventListener('resize', () => {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        });
+
+        initBgCanvas();
+        animateBgCanvas();
+
+
         // ==========================================
         // 4. LED MATRIX GLITCH ENGINE (CANVAS)
         // ==========================================
-        const canvas = document.getElementById('ledCanvas');
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const ledCanvas = document.getElementById('ledCanvas');
+        const ledCtx = ledCanvas.getContext('2d', { willReadFrequently: true });
         
         let dots = [];
         const DOT_SIZE = 4;
         const GAP = 2;
         const SPACING = DOT_SIZE + GAP;
 
-        function initMatrix() {
+        function initLEDMatrix() {
             const wrapper = document.querySelector('.led-wrapper');
-            canvas.width = wrapper.clientWidth;
-            canvas.height = wrapper.clientHeight;
+            ledCanvas.width = wrapper.clientWidth;
+            ledCanvas.height = wrapper.clientHeight;
 
             const offCanvas = document.createElement('canvas');
-            offCanvas.width = canvas.width;
-            offCanvas.height = canvas.height;
+            offCanvas.width = ledCanvas.width;
+            offCanvas.height = ledCanvas.height;
             const oCtx = offCanvas.getContext('2d', { willReadFrequently: true });
 
             oCtx.fillStyle = 'white';
@@ -492,18 +575,18 @@
             oCtx.textAlign = 'center';
             
             const targetText = "SANSKAR JAISWAL";
-            let fontSize = canvas.width / (targetText.length * 0.55); 
+            let fontSize = ledCanvas.width / (targetText.length * 0.55); 
             if (fontSize > 110) fontSize = 110; 
             
             oCtx.font = `900 ${fontSize}px 'Rajdhani', sans-serif`;
-            oCtx.fillText(targetText, canvas.width / 2, canvas.height / 2);
+            oCtx.fillText(targetText, ledCanvas.width / 2, ledCanvas.height / 2);
 
-            const imgData = oCtx.getImageData(0, 0, canvas.width, canvas.height).data;
+            const imgData = oCtx.getImageData(0, 0, ledCanvas.width, ledCanvas.height).data;
             dots = [];
 
-            for (let y = 0; y < canvas.height; y += SPACING) {
-                for (let x = 0; x < canvas.width; x += SPACING) {
-                    const i = (y * canvas.width + x) * 4;
+            for (let y = 0; y < ledCanvas.height; y += SPACING) {
+                for (let x = 0; x < ledCanvas.width; x += SPACING) {
+                    const i = (y * ledCanvas.width + x) * 4;
                     if (imgData[i + 3] > 128) {
                         dots.push({ x: x, y: y, baseAlpha: 1, currentAlpha: 1 });
                     }
@@ -512,9 +595,9 @@
         }
 
         let lastGlitchTime = 0;
-        const GLITCH_SPEED_MS = 150; 
+        const GLITCH_SPEED_MS = 150; // Controls how fast the pixels flicker
 
-        function animateMatrix(timestamp) {
+        function animateLEDMatrix(timestamp) {
             if (!lastGlitchTime) lastGlitchTime = timestamp;
             const delta = timestamp - lastGlitchTime;
 
@@ -530,28 +613,28 @@
                 lastGlitchTime = timestamp;
             }
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.shadowBlur = 12;
+            ledCtx.clearRect(0, 0, ledCanvas.width, ledCanvas.height);
+            ledCtx.shadowBlur = 15;
 
-            // Tie the Canvas color to the dynamic HTML theme!
+            // Tie the LED color to the dynamic globalHue calculated by the background!
             const theme = document.documentElement.getAttribute('data-theme');
-            const lightness = theme === 'light' ? '25%' : '60%'; // Dark text for light mode
+            const lightness = theme === 'light' ? '30%' : '60%'; 
             
-            ctx.shadowColor = `hsl(${currentHue}, 100%, ${lightness})`;
+            ledCtx.shadowColor = `hsl(${globalHue}, 100%, ${lightness})`;
 
             for (let i = 0; i < dots.length; i++) {
-                ctx.fillStyle = `hsla(${currentHue}, 100%, ${lightness}, ${dots[i].currentAlpha})`;
-                ctx.fillRect(dots[i].x, dots[i].y, DOT_SIZE, DOT_SIZE);
+                ledCtx.fillStyle = `hsla(${globalHue}, 100%, ${lightness}, ${dots[i].currentAlpha})`;
+                ledCtx.fillRect(dots[i].x, dots[i].y, DOT_SIZE, DOT_SIZE);
             }
 
-            requestAnimationFrame(animateMatrix);
+            requestAnimationFrame(animateLEDMatrix);
         }
 
-        window.addEventListener('resize', initMatrix);
+        window.addEventListener('resize', initLEDMatrix);
         
         document.fonts.ready.then(() => {
-            initMatrix();
-            requestAnimationFrame(animateMatrix);
+            initLEDMatrix();
+            requestAnimationFrame(animateLEDMatrix);
         });
 
     </script>
