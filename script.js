@@ -9,8 +9,9 @@ const COMMUNICATIONS = [
 ];
 
 const SKILLS = [
-    "C# & Unity Engine", "Python & Pandas Dataframes", "Java Architecture", 
-    "C / C++ Fundamentals", "SQL Database Management", "3D Modeling & Rendering"
+    "C#", "Python [Pandas, Numpy, Matplotlib, Seaborn]", "Java OOP", 
+    "C / C++", "SQL Database Management", "3D Modeling & Rendering",
+    "Git / Github"
 ];
 
 const PROJECTS = [
