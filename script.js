@@ -4,7 +4,7 @@
 const COMMUNICATIONS = [
     { name: "GitHub", url: "https://github.com/ROYALKINGSJ", icon: "/ICONS/github.png" },
     { name: "Email", url: "mailto:technologiccompany.sanskar+sanskarjaiswal.portfolio@gmail.com", icon: "/ICONS/email.png" },
-    { name: "LinkedIn", url: "linkedin.com/in/tech-com-35705a235", icon: "/ICONS/linkedin.png" },
+    { name: "LinkedIn", url: "https://www.linkedin.com/in/tech-com-35705a235", icon: "/ICONS/linkedin.png" },
     { name: "Patreon", url: "https://patreon.com/TECHCOM?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink", icon: "/ICONS/patreon.png" }
 ];
 
