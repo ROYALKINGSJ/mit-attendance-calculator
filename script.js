@@ -2,10 +2,10 @@
 // 1. DATA CONFIGURATION & DOM RENDER
 // ==========================================
 const COMMUNICATIONS = [
-    { name: "GitHub", url: "https://github.com/ROYALKINGSJ", icon: "https://cdn-icons-png.flaticon.com/512/733/733553.png" },
-    { name: "Email", url: "mailto:technologiccompany.sanskar@gmail.com", icon: "https://cdn-icons-png.flaticon.com/512/732/732200.png" },
-    { name: "LinkedIn", url: "#", icon: "https://cdn-icons-png.flaticon.com/512/3536/3536505.png" },
-    { name: "Play Store", url: "#", icon: "https://cdn-icons-png.flaticon.com/512/888/888857.png" }
+    { name: "GitHub", url: "https://github.com/ROYALKINGSJ", icon: "/ICONS/github.png" },
+    { name: "Email", url: "mailto:technologiccompany.sanskar@gmail.com", icon: "/ICONS/email.png" },
+    { name: "LinkedIn", url: "#", icon: "/ICONS/linkedin.png" },
+    { name: "Patreon", url: "https://patreon.com/TECHCOM?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink", icon: "/ICONS/patreon.png" }
 ];
 
 const SKILLS = [
