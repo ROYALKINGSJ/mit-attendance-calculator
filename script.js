@@ -15,8 +15,7 @@ const SKILLS = [
 ];
 
 const PROJECTS = [
-    { title: "Unity Physics Engine", desc: "Developing smooth player movement scripts and resolving complex physics jittering in 3D environments.", statusText: "ENGINE DEV", url: "#" },
-    { title: "Open Source Contributor", desc: "Roadmap to GSoC 2027. Analyzing and contributing to major repositories like PSF, Zulip, and urllib3.", statusText: "PROTOCOL ACTIVE", url: "#" },
+    { title: "Unity Game Dev", desc: "Developing smooth player movement scripts and resolving complex physics jittering in 3D environments.", statusText: "ENGINE DEV", url: "#" },
     { title: "MIT Attendance Hub", desc: "Full-stack portal featuring secure user auth, API key management, and automated CSV data handling.", statusText: "LIVE DEPLOYMENT", url: "https://github.com/ROYALKINGSJ/attendance-calculator" }
 ];
 
