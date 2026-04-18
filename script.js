@@ -93,17 +93,40 @@ class Orb {
     constructor(canvasWidth, canvasHeight) {
         this.x = Math.random() * canvasWidth;
         this.y = Math.random() * canvasHeight;
-        this.vx = (Math.random() - 0.5) * 1.5;
-        this.vy = (Math.random() - 0.5) * 1.5;
+        this.vx = (Math.random() - 0.5) * 2;
+        this.vy = (Math.random() - 0.5) * 2;
         this.radius = Math.random() * 300 + 400; 
-        this.hue = Math.random() * 100 + 200; 
-        this.hueSpeed = (Math.random() - 0.5) * 0.5;
         this.baseAlpha = Math.random() * 0.4 + 0.3;
         this.currentAlpha = this.baseAlpha;
+        
+        // New organic movement properties
+        this.angle = Math.random() * Math.PI * 2;
+        this.turnSpeed = (Math.random() - 0.5) * 0.02;
+
+        this.hue = Math.random() * 360; // Starts random, but will immediately adapt
     }
 
-    update(canvasWidth, canvasHeight) {
-        // Soft mouse repulsion
+    update(canvasWidth, canvasHeight, isLightMode) {
+        // --- 1. DYNAMIC THEME COLOR SHIFTING ---
+        // Dark Mode: Deep Purples & Pinks (~280) | Light Mode: Warm Sunrise Oranges (~40)
+        let targetHue = isLightMode ? (Math.random() * 40 + 20) : (Math.random() * 60 + 260);
+
+        // Smoothly morph the color towards the current theme's palette
+        let hueDiff = targetHue - this.hue;
+        if (hueDiff > 180) hueDiff -= 360;
+        if (hueDiff < -180) hueDiff += 360;
+        this.hue += hueDiff * 0.01; 
+
+        if (this.hue > 360) this.hue -= 360;
+        if (this.hue < 0) this.hue += 360;
+
+        // --- 2. ORGANIC SWIRLING MOVEMENT ---
+        // Slowly steer the orbs so they curve and swirl
+        this.angle += this.turnSpeed;
+        this.vx += Math.cos(this.angle) * 0.04;
+        this.vy += Math.sin(this.angle) * 0.04;
+
+        // Mouse repulsion
         const dx = this.x - mouseX;
         const dy = this.y - mouseY;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -114,13 +137,16 @@ class Orb {
             this.vy += (dy / dist) * force * 0.5;
         }
 
-        // Stronger friction to calm down after a click shockwave
-        this.vx *= 0.95;
-        this.vy *= 0.95;
+        // Friction and speed capping
+        this.vx *= 0.96;
+        this.vy *= 0.96;
 
-        // Ensure minimum speed isn't zeroed out by friction
         const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        if (speed < 0.5 && speed > 0.01) {
+        // Cap max speed, but force a minimum speed so they never stop sweeping
+        if (speed > 2.5) {
+            this.vx = (this.vx / speed) * 2.5;
+            this.vy = (this.vy / speed) * 2.5;
+        } else if (speed < 0.8) {
             this.vx *= 1.05;
             this.vy *= 1.05;
         }
@@ -128,23 +154,20 @@ class Orb {
         this.x += this.vx;
         this.y += this.vy;
 
-        // Wall Bounce
+        // Soft Wall Bounces
         if (this.x < -this.radius) this.vx += 0.5;
         if (this.x > canvasWidth + this.radius) this.vx -= 0.5;
         if (this.y < -this.radius) this.vy += 0.5;
         if (this.y > canvasHeight + this.radius) this.vy -= 0.5;
 
-        this.hue += this.hueSpeed;
-        if (this.hue > 360) this.hue = 0; if (this.hue < 0) this.hue = 360;
-
-        // Smoothly maintain base opacity without any random blinking
+        // Keep opacity perfectly smooth (no blinking)
         this.currentAlpha = this.baseAlpha;
     }
 
     draw(ctx, isLightMode) {
         const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
         const sat = isLightMode ? '90%' : '100%';
-        const lit = isLightMode ? '30%' : '50%';
+        const lit = isLightMode ? '55%' : '45%'; 
         
         gradient.addColorStop(0, `hsla(${this.hue}, ${sat}, ${lit}, ${this.currentAlpha})`);
         gradient.addColorStop(1, `hsla(${this.hue}, ${sat}, ${lit}, 0)`);
@@ -153,7 +176,6 @@ class Orb {
         ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill();
     }
 }
-
 class DataParticle {
     constructor(canvasWidth, canvasHeight) {
         this.x = Math.random() * canvasWidth;
@@ -212,7 +234,7 @@ function animateBgCanvas() {
 
     let avgHue = 0;
     for (let i = 0; i < orbs.length; i++) {
-        orbs[i].update(bgCanvas.width, bgCanvas.height);
+        orbs[i].update(bgCanvas.width, bgCanvas.height, isLightMode); // Added isLightMode here
         orbs[i].draw(bgCtx, isLightMode);
         avgHue += orbs[i].hue;
     }
