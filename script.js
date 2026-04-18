@@ -137,11 +137,8 @@ class Orb {
         this.hue += this.hueSpeed;
         if (this.hue > 360) this.hue = 0; if (this.hue < 0) this.hue = 360;
 
-        if (Math.random() < 0.02) {
-            this.currentAlpha = Math.random() * 0.8 + 0.2; 
-        } else {
-            this.currentAlpha += (this.baseAlpha - this.currentAlpha) * 0.05;
-        }
+        // Smoothly maintain base opacity without any random blinking
+        this.currentAlpha = this.baseAlpha;
     }
 
     draw(ctx, isLightMode) {
