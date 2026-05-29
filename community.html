@@ -100,14 +100,14 @@
         </div>
         
         <div id="auth-firewall" style="text-align: center; padding: 40px; background: var(--input-bg); border-radius: 12px; border: 1px solid var(--border-color);">
-            <div style="color: var(--danger-color); font-size: 2.5rem; margin-bottom: 10px;">🔒</div>
+            <div style="color: #00a4ef; font-size: 2.5rem; margin-bottom: 10px;">🛡️</div>
             <h2 style="margin: 0 0 10px 0;">Student Access Only</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 20px;">Enter your college email to receive a secure passwordless login link.</p>
-            <div style="max-width: 320px; margin: 0 auto; display:flex; flex-direction:column; gap:10px;">
-                <input type="email" id="college-email-input" placeholder="yourname@learner.manipal.edu" style="padding:12px; border-radius:8px; border:1px solid var(--border-color); background:var(--card-bg); color:var(--text-color); font-family:inherit;">
-                <button class="btn-calc" id="send-link-btn" style="margin-top:0;">Send Magic Link</button>
-                <div id="auth-status" style="font-size:0.85rem; color:var(--accent-color); min-height: 20px; margin-top:5px; font-weight:500;"></div>
-            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 25px;">Authenticate with your MIT Microsoft account to access the peer matrix.</p>
+            <button class="btn-calc" id="ms-login-btn" style="max-width: 250px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 10px; background-color: #00a4ef;">
+                <svg width="18" height="18" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h10v10H0zM11 0h10v10H11zM0 11h10v10H0zM11 11h10v10H11z" fill="#fff"/></svg>
+                Sign in with Microsoft
+            </button>
+            <div id="auth-status" style="font-size:0.85rem; color:var(--danger-color); min-height: 20px; margin-top:15px; font-weight:500;"></div>
         </div>
 
         <div class="projects-grid" id="marketplace-container" style="display: none;"></div>
@@ -148,7 +148,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
-    import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+    import { getAuth, OAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
 
@@ -163,12 +163,14 @@
         measurementId: "G-5Y5LFV9H3Z"
     };
 
-    // Initialize Firebase Services
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
     const auth = getAuth(app);
     const db = getFirestore(app);
     const storage = getStorage(app);
+    
+    // Initialize Microsoft Provider
+    const msProvider = new OAuthProvider('microsoft.com');
 
     // DOM Elements
     const authBtn = document.getElementById('auth-btn');
@@ -176,13 +178,36 @@
     const marketplaceContainer = document.getElementById('marketplace-container');
     const postServiceBtn = document.getElementById('post-service-btn');
     const userBadge = document.getElementById('user-profile-badge');
-
-    let currentUser = null;
+    const msLoginBtn = document.getElementById('ms-login-btn');
+    const authStatus = document.getElementById('auth-status');
     
-    // Set the specific college email domain requirement
-    const COLLEGE_DOMAIN = "@gmail.com"; 
+    // --- MANIPAL DOMAIN LOCK ---
+    const COLLEGE_DOMAIN = "@learner.manipal.edu"; 
+    let currentUser = null;
 
-    // --- AUTHENTICATION FLOW (MAGIC LINK) ---
+    // --- GATEKEEPER LOGIN LOGIC ---
+    const loginWithMicrosoft = async () => {
+        try {
+            authStatus.innerText = "Authenticating...";
+            authStatus.style.color = "var(--text-secondary)";
+            
+            const result = await signInWithPopup(auth, msProvider);
+            const user = result.user;
+            
+            // Domain check immediately after OAuth return
+            if (!user.email.endsWith(COLLEGE_DOMAIN)) {
+                await signOut(auth); // Instantly terminate session
+                authStatus.style.color = "var(--danger-color)";
+                authStatus.innerText = `Access Denied: Only ${COLLEGE_DOMAIN} accounts are authorized.`;
+                return;
+            }
+        } catch (error) {
+            console.error("Microsoft Auth Error:", error);
+            authStatus.style.color = "var(--danger-color)";
+            authStatus.innerText = "Authentication was cancelled or failed.";
+        }
+    };
+
     authBtn.style.display = 'block'; 
     authBtn.addEventListener('click', () => {
         if (currentUser) {
@@ -191,68 +216,18 @@
             window.scrollTo(0,0);
         }
     });
+    
+    msLoginBtn.addEventListener('click', loginWithMicrosoft);
 
-    const emailInput = document.getElementById('college-email-input');
-    const sendLinkBtn = document.getElementById('send-link-btn');
-    const authStatus = document.getElementById('auth-status');
-
-    // 1. Trigger Magic Link email delivery
-    sendLinkBtn.addEventListener('click', async () => {
-        const email = emailInput.value.trim();
-        
-        if (!email.endsWith(COLLEGE_DOMAIN)) {
-            authStatus.style.color = "var(--danger-color)";
-            authStatus.innerText = `Access denied. Requires a valid ${COLLEGE_DOMAIN} address.`;
-            return;
-        }
-
-        const actionCodeSettings = {
-            url: window.location.href, // Bounces back to this exact page
-            handleCodeInApp: true
-        };
-
-        try {
-            sendLinkBtn.disabled = true;
-            authStatus.style.color = "var(--text-secondary)";
-            authStatus.innerText = "Generating encryption key...";
-            
-            await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-            window.localStorage.setItem('emailForSignIn', email); 
-            
-            authStatus.style.color = "var(--success-color)";
-            authStatus.innerText = "Verification link deployed! Check your inbox.";
-        } catch (error) {
-            console.error("Auth distribution failure", error);
-            authStatus.style.color = "var(--danger-color)";
-            authStatus.innerText = "Error deploying link. Check console.";
-            sendLinkBtn.disabled = false;
-        }
-    });
-
-    // 2. Check if the current URL contains an incoming authentication link
-    if (isSignInWithEmailLink(auth, window.location.href)) {
-        let email = window.localStorage.getItem('emailForSignIn');
-        if (!email) {
-            email = window.prompt('Please re-enter your student email address for confirmation:');
-        }
-        
-        if (email) {
-            authStatus.innerText = "Verifying link credentials...";
-            signInWithEmailLink(auth, email, window.location.href)
-                .then(() => {
-                    window.localStorage.removeItem('emailForSignIn');
-                    window.history.replaceState({}, document.title, window.location.pathname); // Cleans up URL
-                })
-                .catch((error) => {
-                    console.error("Link authentication failed", error);
-                    alert("Link expired or invalid. Please request a new one.");
-                });
-        }
-    }
-
-    // 3. Live auth state monitor
-    onAuthStateChanged(auth, (user) => {
+    // Live auth state monitor
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
+            // Double-check domain on state change (prevents cache bypassing)
+            if (!user.email.endsWith(COLLEGE_DOMAIN)) {
+                await signOut(auth);
+                return;
+            }
+
             currentUser = user;
             authBtn.innerText = "LOGOUT";
             authFirewall.style.display = 'none';
@@ -260,8 +235,9 @@
             postServiceBtn.style.display = 'block';
             
             userBadge.style.display = 'flex';
-            document.getElementById('user-avatar').src = "https://cdn-icons-png.flaticon.com/512/847/847969.png"; 
-            document.getElementById('user-name-display').innerText = user.email.split('@')[0];
+            // Use user's Microsoft profile picture if available, else placeholder
+            document.getElementById('user-avatar').src = user.photoURL || "https://cdn-icons-png.flaticon.com/512/847/847969.png"; 
+            document.getElementById('user-name-display').innerText = user.displayName || user.email.split('@')[0];
             
             fetchServices();
         } else {
@@ -356,8 +332,8 @@
                 desc: desc, 
                 imageUrl: imageUrl,
                 userId: currentUser.uid, 
-                userName: currentUser.email.split('@')[0], 
-                userAvatar: "https://cdn-icons-png.flaticon.com/512/847/847969.png",
+                userName: currentUser.displayName || currentUser.email.split('@')[0], 
+                userAvatar: currentUser.photoURL || "https://cdn-icons-png.flaticon.com/512/847/847969.png",
                 createdAt: serverTimestamp()
             });
 
