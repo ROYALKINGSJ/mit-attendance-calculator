@@ -149,7 +149,7 @@
             <input type="number" id="post-expire" placeholder="e.g. 7 (Leave blank for never)" min="1">
         </div>
         <div class="input-group">
-            <label>Preview Image (Max 2MB)</label>
+            <label>Preview Image (Max 5MB)</label>
             <input type="file" id="post-image" accept="image/png, image/jpeg">
         </div>
         <button class="btn-calc" id="submit-post-btn">Deploy Service</button>
@@ -375,8 +375,8 @@
         try {
             // ImgBB Upload Pipeline
             if (file) {
-                if(file.size > 2097152) { 
-                    alert("Asset size overflow. Image must be under 2MB.");
+                if(file.size > 5242880) { 
+                    alert("Asset size overflow. Image must be under 5MB.");
                     submitPostBtn.disabled = false; uploadStatus.innerText = ""; return;
                 }
                 uploadStatus.innerText = "Uploading visual asset to external host (ImgBB)...";
