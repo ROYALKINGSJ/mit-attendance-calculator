@@ -146,7 +146,7 @@
         </div>
         <div class="input-group">
             <label>Auto-Delete After (Days) - Optional</label>
-            <input type="number" id="post-expire" placeholder="e.g. 7 (Leave blank for never)" min="1">
+            <input type="number" id="post-expire" placeholder="e.g. 7 (Defaults to 30 days)" min="1">
         </div>
         <div class="input-group">
             <label>Preview Image (Max 5MB)</label>
@@ -361,12 +361,12 @@
             return; 
         }
 
-        // Calculate precise expiration timestamp
-        let expiresAt = null;
+        // Calculate precise expiration timestamp (Defaults to 30 days)
+        let finalDays = 30; // Default fallback
         if (expireDays && !isNaN(expireDays) && expireDays > 0) {
-            // current time in MS + (days * hours * minutes * seconds * milliseconds)
-            expiresAt = Date.now() + (parseInt(expireDays) * 24 * 60 * 60 * 1000); 
+            finalDays = parseInt(expireDays);
         }
+        const expiresAt = Date.now() + (finalDays * 24 * 60 * 60 * 1000);
 
         submitPostBtn.disabled = true;
         uploadStatus.innerText = "Initializing deployment parameters...";
