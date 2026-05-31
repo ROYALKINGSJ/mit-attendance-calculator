@@ -183,6 +183,7 @@
     
     // --- MANIPAL DOMAIN LOCK ---
     const COLLEGE_DOMAIN = "@learner.manipal.edu"; 
+    const ADMIN_OVERRIDE_EMAIL = "technologiccompany.sanskar@gmail.com";
     let currentUser = null;
 
     // --- GATEKEEPER LOGIN LOGIC ---
@@ -195,7 +196,7 @@
             const user = result.user;
             
             // Domain check immediately after OAuth return
-            if (!user.email.endsWith(COLLEGE_DOMAIN)) {
+            if (!user.email.endsWith(COLLEGE_DOMAIN) && user.email !== ADMIN_OVERRIDE_EMAIL) {
                 await signOut(auth); // Instantly terminate session
                 authStatus.style.color = "var(--danger-color)";
                 authStatus.innerText = `Access Denied: Only ${COLLEGE_DOMAIN} accounts are authorized.`;
@@ -223,7 +224,7 @@
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             // Double-check domain on state change (prevents cache bypassing)
-            if (!user.email.endsWith(COLLEGE_DOMAIN)) {
+            if (!user.email.endsWith(COLLEGE_DOMAIN) && user.email !== ADMIN_OVERRIDE_EMAIL) {
                 await signOut(auth);
                 return;
             }
