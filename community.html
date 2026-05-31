@@ -160,7 +160,8 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
-    import { getAuth, OAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+    // NOTE: Swapped back to signInWithPopup instead of Redirect
+    import { getAuth, OAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
     // Your exact Firebase configuration
@@ -214,16 +215,29 @@
         return true;
     };
 
-    // --- GATEKEEPER LOGIN LOGIC ---
+    // --- GATEKEEPER LOGIN LOGIC (Reverted to Popup) ---
     const loginWithMicrosoft = async () => {
         try {
             authStatus.style.color = "var(--text-secondary)";
-            authStatus.innerText = "Redirecting to secure login portal...";
-            await signInWithRedirect(auth, msProvider);
+            authStatus.innerText = "Opening secure login window...";
+            
+            const result = await signInWithPopup(auth, msProvider);
+            
+            if (result && result.user) {
+                await verifyAccess(result.user);
+            }
         } catch (error) {
-            console.error("Redirect trigger failed:", error);
+            console.error("Popup login failed:", error);
             authStatus.style.color = "var(--danger-color)";
-            authStatus.innerText = "Could not reach authentication server.";
+            
+            // Handle specific popup closure and credential conflicts
+            if (error.code === 'auth/popup-closed-by-user') {
+                authStatus.innerText = "Authentication was cancelled. Please complete the login in the popup window.";
+            } else if (error.code === 'auth/account-exists-with-different-credential') {
+                authStatus.innerText = "Conflict: This email is registered via password. Please delete the old user in Firebase Auth.";
+            } else {
+                authStatus.innerText = "Secure login failed or was blocked. If you are using a strict browser, ensure popups are allowed.";
+            }
         }
     };
 
@@ -237,22 +251,6 @@
     });
     
     msLoginBtn.addEventListener('click', loginWithMicrosoft);
-
-    // --- CATCH THE RETURNING REDIRECT ---
-    getRedirectResult(auth).then(async (result) => {
-        if (result && result.user) {
-            await verifyAccess(result.user);
-        }
-    }).catch((error) => {
-        console.error("Microsoft Return Error:", error);
-        authStatus.style.color = "var(--danger-color)";
-        // Catch the old password account conflict specifically
-        if (error.code === 'auth/account-exists-with-different-credential') {
-            authStatus.innerText = "Conflict: This email is registered via password. Please delete the old user in Firebase Auth.";
-        } else {
-            authStatus.innerText = "Secure login was interrupted. Try again.";
-        }
-    });
 
     // --- LIVE AUTH STATE MONITOR ---
     onAuthStateChanged(auth, async (user) => {
