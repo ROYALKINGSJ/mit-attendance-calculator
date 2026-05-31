@@ -148,9 +148,9 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
-    import { getAuth, OAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+    // NOTE: Removed Firebase Storage imports, added signInWithRedirect and getRedirectResult
+    import { getAuth, OAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
 
     // Your exact Firebase configuration
     const firebaseConfig = {
@@ -167,7 +167,7 @@
     const analytics = getAnalytics(app);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const storage = getStorage(app);
+    // NOTE: storage initialization removed
     
     // Initialize Microsoft Provider
     const msProvider = new OAuthProvider('microsoft.com');
@@ -186,26 +186,16 @@
     const ADMIN_OVERRIDE_EMAIL = "technologiccompany.sanskar@gmail.com";
     let currentUser = null;
 
-    // --- GATEKEEPER LOGIN LOGIC ---
+    // --- GATEKEEPER LOGIN LOGIC (Updated to Redirect) ---
     const loginWithMicrosoft = async () => {
         try {
-            authStatus.innerText = "Authenticating...";
             authStatus.style.color = "var(--text-secondary)";
-            
-            const result = await signInWithPopup(auth, msProvider);
-            const user = result.user;
-            
-            // Domain check immediately after OAuth return
-            if (!user.email.endsWith(COLLEGE_DOMAIN) && user.email !== ADMIN_OVERRIDE_EMAIL) {
-                await signOut(auth); // Instantly terminate session
-                authStatus.style.color = "var(--danger-color)";
-                authStatus.innerText = `Access Denied: Only ${COLLEGE_DOMAIN} accounts are authorized.`;
-                return;
-            }
+            authStatus.innerText = "Redirecting to secure login portal...";
+            await signInWithRedirect(auth, msProvider);
         } catch (error) {
-            console.error("Microsoft Auth Error:", error);
+            console.error("Redirect trigger failed:", error);
             authStatus.style.color = "var(--danger-color)";
-            authStatus.innerText = "Authentication was cancelled or failed.";
+            authStatus.innerText = "Could not reach authentication server.";
         }
     };
 
@@ -219,6 +209,23 @@
     });
     
     msLoginBtn.addEventListener('click', loginWithMicrosoft);
+
+    // --- CATCH THE RETURNING REDIRECT ---
+    getRedirectResult(auth).then(async (result) => {
+        if (result) {
+            const user = result.user;
+            // Gatekeeper check immediately upon return
+            if (!user.email.endsWith(COLLEGE_DOMAIN) && user.email !== ADMIN_OVERRIDE_EMAIL) {
+                await signOut(auth); // Instantly terminate session
+                authStatus.style.color = "var(--danger-color)";
+                authStatus.innerText = `Access Denied: Only ${COLLEGE_DOMAIN} accounts are authorized.`;
+            }
+        }
+    }).catch((error) => {
+        console.error("Microsoft Return Error:", error);
+        authStatus.style.color = "var(--danger-color)";
+        authStatus.innerText = "Secure login was interrupted. Try again.";
+    });
 
     // Live auth state monitor
     onAuthStateChanged(auth, async (user) => {
@@ -310,18 +317,33 @@
 
         let imageUrl = null;
         try {
-            // Upload preview asset if attached
+            // --- NEW IMGBB UPLOAD PIPELINE ---
             if (file) {
-                if(file.size > 1048576) { 
-                    alert("Asset size overflow. Image must be under 1MB.");
+                if(file.size > 2097152) { // ImgBB allows more, but keeping a 2MB limit for safety and speed
+                    alert("Asset size overflow. Image must be under 2MB.");
                     submitPostBtn.disabled = false; 
                     uploadStatus.innerText = ""; 
                     return;
                 }
-                uploadStatus.innerText = "Uploading visual asset to storage...";
-                const storageRef = ref(storage, `service_images/${Date.now()}_${file.name}`);
-                await uploadBytes(storageRef, file);
-                imageUrl = await getDownloadURL(storageRef);
+                uploadStatus.innerText = "Uploading visual asset to external host (ImgBB)...";
+                
+                // Package the image for ImgBB
+                const formData = new FormData();
+                formData.append("image", file);
+                
+                // POST to ImgBB using your specific API key
+                const imgbbResponse = await fetch("https://api.imgbb.com/1/upload?key=ff1ce4c0d634dc29f5396f689506c356", {
+                    method: "POST",
+                    body: formData
+                });
+                
+                const imgData = await imgbbResponse.json();
+                
+                if (imgData.success) {
+                    imageUrl = imgData.data.url; // Extracting the direct public URL from JSON response
+                } else {
+                    throw new Error("ImgBB Upload Failed: " + (imgData.error?.message || "Unknown error"));
+                }
             }
 
             // Commit document record to Firestore database
