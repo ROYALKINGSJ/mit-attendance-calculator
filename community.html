@@ -161,7 +161,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
     import { getAuth, OAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-    // NOTE: Added deleteDoc and doc to imports for deletion features
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
     // Your exact Firebase configuration
@@ -197,6 +196,24 @@
     const ADMIN_OVERRIDE_EMAIL = "technologiccompany.sanskar@gmail.com";
     let currentUser = null;
 
+    // --- BULLETPROOF ACCESS CHECKER ---
+    const verifyAccess = async (user) => {
+        if (!user) return false;
+        
+        // Safely grab the email, force lowercase, and handle nulls
+        const userEmail = (user.email || "").toLowerCase();
+        const collegeDomain = COLLEGE_DOMAIN.toLowerCase();
+        const adminEmail = ADMIN_OVERRIDE_EMAIL.toLowerCase();
+
+        if (!userEmail.endsWith(collegeDomain) && userEmail !== adminEmail) {
+            await signOut(auth);
+            authStatus.style.color = "var(--danger-color)";
+            authStatus.innerText = `Access Denied: Unrecognized email (${userEmail || "No Email Provided"}).`;
+            return false;
+        }
+        return true;
+    };
+
     // --- GATEKEEPER LOGIN LOGIC ---
     const loginWithMicrosoft = async () => {
         try {
@@ -223,27 +240,25 @@
 
     // --- CATCH THE RETURNING REDIRECT ---
     getRedirectResult(auth).then(async (result) => {
-        if (result) {
-            const user = result.user;
-            if (!user.email.endsWith(COLLEGE_DOMAIN) && user.email !== ADMIN_OVERRIDE_EMAIL) {
-                await signOut(auth); 
-                authStatus.style.color = "var(--danger-color)";
-                authStatus.innerText = `Access Denied: Only ${COLLEGE_DOMAIN} accounts are authorized.`;
-            }
+        if (result && result.user) {
+            await verifyAccess(result.user);
         }
     }).catch((error) => {
         console.error("Microsoft Return Error:", error);
         authStatus.style.color = "var(--danger-color)";
-        authStatus.innerText = "Secure login was interrupted. Try again.";
+        // Catch the old password account conflict specifically
+        if (error.code === 'auth/account-exists-with-different-credential') {
+            authStatus.innerText = "Conflict: This email is registered via password. Please delete the old user in Firebase Auth.";
+        } else {
+            authStatus.innerText = "Secure login was interrupted. Try again.";
+        }
     });
 
-    // Live auth state monitor
+    // --- LIVE AUTH STATE MONITOR ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            if (!user.email.endsWith(COLLEGE_DOMAIN) && user.email !== ADMIN_OVERRIDE_EMAIL) {
-                await signOut(auth);
-                return;
-            }
+            const isAllowed = await verifyAccess(user);
+            if (!isAllowed) return; // Stop executing if they got kicked out
 
             currentUser = user;
             authBtn.innerText = "LOGOUT";
@@ -267,7 +282,6 @@
     });
 
     // --- GLOBAL DELETE FUNCTION ---
-    // Exposed to the window object so our inline HTML buttons can trigger it
     window.deleteService = async (docId) => {
         if (confirm("Are you sure you want to permanently delete this service deployment?")) {
             try {
@@ -294,14 +308,13 @@
 
                 // Auto-Delete Lazy Cleanup logic
                 if (srv.expiresAt && now > srv.expiresAt) {
-                    // Post has expired! Delete it silently in the background and skip rendering it.
                     deleteDoc(doc(db, "services", docId)).catch(err => console.error("Auto-cleanup failed:", err));
                     return; 
                 }
 
                 activePostsCount++;
 
-                // Build Delete Button (Only if current user owns the post)
+                // Build Delete Button
                 let deleteBtnHtml = '';
                 if (currentUser && currentUser.uid === srv.userId) {
                     deleteBtnHtml = `<button class="delete-btn" onclick="window.deleteService('${docId}')" title="Delete Post">🗑️</button>`;
@@ -352,7 +365,7 @@
         const price = document.getElementById('post-price').value.trim();
         const phone = document.getElementById('post-phone').value.trim();
         const desc = document.getElementById('post-desc').value.trim();
-        const expireDays = document.getElementById('post-expire').value.trim(); // New Field
+        const expireDays = document.getElementById('post-expire').value.trim(); 
         const fileInput = document.getElementById('post-image');
         const file = fileInput.files[0];
 
@@ -397,7 +410,7 @@
                 phone: phone, 
                 desc: desc, 
                 imageUrl: imageUrl,
-                expiresAt: expiresAt, // Saves the timestamp, or null if they left it blank
+                expiresAt: expiresAt, 
                 userId: currentUser.uid, 
                 userName: currentUser.displayName || currentUser.email.split('@')[0], 
                 userAvatar: currentUser.photoURL || "https://cdn-icons-png.flaticon.com/512/847/847969.png",
