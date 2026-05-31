@@ -39,7 +39,7 @@
         
         /* --- MARKETPLACE UI --- */
         .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
-        .project-card { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; }
+        .project-card { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; position: relative; }
         .project-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); border-color: var(--text-secondary); }
         .proj-title { font-size: 1.2rem; font-weight: 700; margin: 0 0 10px 0; color: var(--text-color); }
         .proj-desc { font-size: 0.9rem; color: var(--text-secondary); margin: 0 0 20px 0; line-height: 1.5; flex-grow: 1; }
@@ -48,8 +48,16 @@
         .action-btn:hover { background: var(--accent-color); color: white; }
         
         .service-price { font-size: 1.3rem; font-weight: 700; color: var(--success-color); margin-bottom: 12px; }
-        .service-user { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; font-weight: 500; }
+        
+        /* New Header Row for Delete Button */
+        .service-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .service-user { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
         .service-user img { width: 24px; height: 24px; border-radius: 50%; background: var(--border-color); }
+        
+        /* Delete Button Styles */
+        .delete-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; padding: 4px; border-radius: 6px; transition: background 0.2s; filter: grayscale(100%); opacity: 0.6; }
+        .delete-btn:hover { background: rgba(239, 68, 68, 0.1); filter: grayscale(0%); opacity: 1; }
+
         .service-image { width: 100%; height: 140px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
         .btn-calc { width: 100%; padding: 14px; background-color: var(--accent-color); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: background-color 0.2s; }
@@ -137,7 +145,11 @@
             <textarea id="post-desc" rows="3" placeholder="Describe the service..." required></textarea>
         </div>
         <div class="input-group">
-            <label>Preview Image (Max 1MB)</label>
+            <label>Auto-Delete After (Days) - Optional</label>
+            <input type="number" id="post-expire" placeholder="e.g. 7 (Leave blank for never)" min="1">
+        </div>
+        <div class="input-group">
+            <label>Preview Image (Max 2MB)</label>
             <input type="file" id="post-image" accept="image/png, image/jpeg">
         </div>
         <button class="btn-calc" id="submit-post-btn">Deploy Service</button>
@@ -148,9 +160,9 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
-    // NOTE: Removed Firebase Storage imports, added signInWithRedirect and getRedirectResult
     import { getAuth, OAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+    // NOTE: Added deleteDoc and doc to imports for deletion features
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
     // Your exact Firebase configuration
     const firebaseConfig = {
@@ -167,7 +179,6 @@
     const analytics = getAnalytics(app);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    // NOTE: storage initialization removed
     
     // Initialize Microsoft Provider
     const msProvider = new OAuthProvider('microsoft.com');
@@ -186,7 +197,7 @@
     const ADMIN_OVERRIDE_EMAIL = "technologiccompany.sanskar@gmail.com";
     let currentUser = null;
 
-    // --- GATEKEEPER LOGIN LOGIC (Updated to Redirect) ---
+    // --- GATEKEEPER LOGIN LOGIC ---
     const loginWithMicrosoft = async () => {
         try {
             authStatus.style.color = "var(--text-secondary)";
@@ -214,9 +225,8 @@
     getRedirectResult(auth).then(async (result) => {
         if (result) {
             const user = result.user;
-            // Gatekeeper check immediately upon return
             if (!user.email.endsWith(COLLEGE_DOMAIN) && user.email !== ADMIN_OVERRIDE_EMAIL) {
-                await signOut(auth); // Instantly terminate session
+                await signOut(auth); 
                 authStatus.style.color = "var(--danger-color)";
                 authStatus.innerText = `Access Denied: Only ${COLLEGE_DOMAIN} accounts are authorized.`;
             }
@@ -230,7 +240,6 @@
     // Live auth state monitor
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            // Double-check domain on state change (prevents cache bypassing)
             if (!user.email.endsWith(COLLEGE_DOMAIN) && user.email !== ADMIN_OVERRIDE_EMAIL) {
                 await signOut(auth);
                 return;
@@ -243,7 +252,6 @@
             postServiceBtn.style.display = 'block';
             
             userBadge.style.display = 'flex';
-            // Use user's Microsoft profile picture if available, else placeholder
             document.getElementById('user-avatar').src = user.photoURL || "https://cdn-icons-png.flaticon.com/512/847/847969.png"; 
             document.getElementById('user-name-display').innerText = user.displayName || user.email.split('@')[0];
             
@@ -258,23 +266,62 @@
         }
     });
 
-    // --- MARKETPLACE SYNC ---
+    // --- GLOBAL DELETE FUNCTION ---
+    // Exposed to the window object so our inline HTML buttons can trigger it
+    window.deleteService = async (docId) => {
+        if (confirm("Are you sure you want to permanently delete this service deployment?")) {
+            try {
+                await deleteDoc(doc(db, "services", docId));
+                console.log("Document successfully deleted");
+            } catch (error) {
+                console.error("Error removing document: ", error);
+                alert("Failed to delete post. Are you sure you own it?");
+            }
+        }
+    };
+
+    // --- MARKETPLACE SYNC & AUTO-DELETE FILTER ---
     function fetchServices() {
         const q = query(collection(db, "services"), orderBy("createdAt", "desc"));
         onSnapshot(q, (snapshot) => {
             marketplaceContainer.innerHTML = '';
-            snapshot.forEach((doc) => {
-                const srv = doc.data();
+            let activePostsCount = 0;
+            const now = Date.now();
+
+            snapshot.forEach((snapshotDoc) => {
+                const srv = snapshotDoc.data();
+                const docId = snapshotDoc.id;
+
+                // Auto-Delete Lazy Cleanup logic
+                if (srv.expiresAt && now > srv.expiresAt) {
+                    // Post has expired! Delete it silently in the background and skip rendering it.
+                    deleteDoc(doc(db, "services", docId)).catch(err => console.error("Auto-cleanup failed:", err));
+                    return; 
+                }
+
+                activePostsCount++;
+
+                // Build Delete Button (Only if current user owns the post)
+                let deleteBtnHtml = '';
+                if (currentUser && currentUser.uid === srv.userId) {
+                    deleteBtnHtml = `<button class="delete-btn" onclick="window.deleteService('${docId}')" title="Delete Post">🗑️</button>`;
+                }
+
                 const msgText = encodeURIComponent(`Hey ${srv.userName}, I'm interested in your service: "${srv.title}"`);
                 const waLink = `https://wa.me/${srv.phone}?text=${msgText}`;
 
                 marketplaceContainer.innerHTML += `
-                    <div class="project-card">
+                    <div class="project-card" id="post-${docId}">
                         ${srv.imageUrl ? `<img src="${srv.imageUrl}" class="service-image" alt="Preview">` : ''}
-                        <div class="service-user">
-                            <img src="${srv.userAvatar}" alt="user">
-                            <span>${srv.userName}</span>
+                        
+                        <div class="service-header-row">
+                            <div class="service-user">
+                                <img src="${srv.userAvatar}" alt="user">
+                                <span>${srv.userName}</span>
+                            </div>
+                            ${deleteBtnHtml}
                         </div>
+
                         <h3 class="proj-title">${srv.title}</h3>
                         <div class="service-price">${srv.price}</div>
                         <p class="proj-desc">${srv.desc}</p>
@@ -284,7 +331,8 @@
                     </div>
                 `;
             });
-            if(snapshot.empty) {
+            
+            if(activePostsCount === 0) {
                 marketplaceContainer.innerHTML = `<div style="color:var(--text-secondary); grid-column: 1 / -1; text-align:center; padding: 40px 0;">No active deployments. Be the first to post.</div>`;
             }
         });
@@ -304,6 +352,7 @@
         const price = document.getElementById('post-price').value.trim();
         const phone = document.getElementById('post-phone').value.trim();
         const desc = document.getElementById('post-desc').value.trim();
+        const expireDays = document.getElementById('post-expire').value.trim(); // New Field
         const fileInput = document.getElementById('post-image');
         const file = fileInput.files[0];
 
@@ -312,38 +361,32 @@
             return; 
         }
 
+        // Calculate precise expiration timestamp
+        let expiresAt = null;
+        if (expireDays && !isNaN(expireDays) && expireDays > 0) {
+            // current time in MS + (days * hours * minutes * seconds * milliseconds)
+            expiresAt = Date.now() + (parseInt(expireDays) * 24 * 60 * 60 * 1000); 
+        }
+
         submitPostBtn.disabled = true;
         uploadStatus.innerText = "Initializing deployment parameters...";
 
         let imageUrl = null;
         try {
-            // --- NEW IMGBB UPLOAD PIPELINE ---
+            // ImgBB Upload Pipeline
             if (file) {
-                if(file.size > 2097152) { // ImgBB allows more, but keeping a 2MB limit for safety and speed
+                if(file.size > 2097152) { 
                     alert("Asset size overflow. Image must be under 2MB.");
-                    submitPostBtn.disabled = false; 
-                    uploadStatus.innerText = ""; 
-                    return;
+                    submitPostBtn.disabled = false; uploadStatus.innerText = ""; return;
                 }
                 uploadStatus.innerText = "Uploading visual asset to external host (ImgBB)...";
-                
-                // Package the image for ImgBB
-                const formData = new FormData();
-                formData.append("image", file);
-                
-                // POST to ImgBB using your specific API key
+                const formData = new FormData(); formData.append("image", file);
                 const imgbbResponse = await fetch("https://api.imgbb.com/1/upload?key=ff1ce4c0d634dc29f5396f689506c356", {
-                    method: "POST",
-                    body: formData
+                    method: "POST", body: formData
                 });
-                
                 const imgData = await imgbbResponse.json();
-                
-                if (imgData.success) {
-                    imageUrl = imgData.data.url; // Extracting the direct public URL from JSON response
-                } else {
-                    throw new Error("ImgBB Upload Failed: " + (imgData.error?.message || "Unknown error"));
-                }
+                if (imgData.success) { imageUrl = imgData.data.url; } 
+                else { throw new Error("ImgBB Upload Failed: " + (imgData.error?.message || "Unknown error")); }
             }
 
             // Commit document record to Firestore database
@@ -354,6 +397,7 @@
                 phone: phone, 
                 desc: desc, 
                 imageUrl: imageUrl,
+                expiresAt: expiresAt, // Saves the timestamp, or null if they left it blank
                 userId: currentUser.uid, 
                 userName: currentUser.displayName || currentUser.email.split('@')[0], 
                 userAvatar: currentUser.photoURL || "https://cdn-icons-png.flaticon.com/512/847/847969.png",
@@ -365,6 +409,7 @@
             document.getElementById('post-price').value = '';
             document.getElementById('post-phone').value = ''; 
             document.getElementById('post-desc').value = '';
+            document.getElementById('post-expire').value = '';
             fileInput.value = ''; 
             
             postModal.style.display = 'none';
