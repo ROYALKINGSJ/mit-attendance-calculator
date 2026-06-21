@@ -1,55 +1,408 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" class="scroll-smooth snap-y snap-mandatory">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S. Jaiswal | Dev Portal</title>
-    <link rel="icon" href="https://fav.farm/🔖" />
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sanskar Jaiswal | Software Engineer</title>
+  
+  <!-- Custom Favicon -->
+  <link rel="icon" href="https://fav.farm/🔖" />
+  
+  <!-- Import Inter & JetBrains Mono Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Configure Tailwind -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            deep: '#030305',
+            surface: 'rgba(255, 255, 255, 0.03)',
+            surfaceHover: 'rgba(255, 255, 255, 0.08)',
+            cyan: { 400: '#00E5FF' },
+            violet: { 400: '#9D4EDD' }, 
+            emerald: { 400: '#34D399' },
+            amber: { 400: '#FBBF24' },
+            rose: { 400: '#FB7185' },
+            patreon: '#FF424D'
+          },
+          animation: {
+            'blob': 'blob 15s infinite alternate ease-in-out',
+            'blob-reverse': 'blob-reverse 18s infinite alternate ease-in-out',
+            'slow-pan': 'slow-pan 30s linear infinite alternate',
+          },
+          keyframes: {
+            blob: {
+              '0%': { transform: 'translate(0px, 0px) scale(1)' },
+              '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+              '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+              '100%': { transform: 'translate(0px, 0px) scale(1)' }
+            },
+            'blob-reverse': {
+              '0%': { transform: 'translate(0px, 0px) scale(1)' },
+              '33%': { transform: 'translate(-50px, 30px) scale(1.2)' },
+              '66%': { transform: 'translate(30px, -30px) scale(0.8)' },
+              '100%': { transform: 'translate(0px, 0px) scale(1)' }
+            },
+            'slow-pan': {
+              '0%': { transform: 'scale(1.1) translate(0%, 0%)' },
+              '100%': { transform: 'scale(1.2) translate(-3%, 3%)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #030305; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #00E5FF; }
+    
+    /* Strict CSS Snapping Rules */
+    html, body { 
+      height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scroll-behavior: smooth; 
+    }
+
+    /* Glass Effect */
+    .glass-panel {
+      background: rgba(15, 15, 20, 0.4);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Magic Flowing Theme-Color Border Hover Effect */
+    .magic-border {
+      position: relative;
+      --theme-color: #00E5FF; /* Fallback */
+    }
+    .magic-border::before {
+      content: "";
+      position: absolute;
+      inset: -1px; 
+      border-radius: inherit; 
+      padding: 2px; 
+      background: linear-gradient(90deg, transparent 0%, var(--theme-color) 25%, transparent 50%);
+      background-size: 300% 100%;
+      animation: magicFlow 2s linear infinite;
+      
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: destination-out;
+      mask-composite: exclude;
+      
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .magic-border:hover::before {
+      opacity: 1;
+    }
+    @keyframes magicFlow {
+      0% { background-position: 300% 0; }
+      100% { background-position: 0% 0; }
+    }
+
+    /* Target Text Glow Effect */
+    .glow-target {
+      transition: color 0.3s ease, font-weight 0.3s ease, text-shadow 0.3s ease, filter 0.3s ease;
+    }
+    .magic-border:hover .glow-target {
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      text-shadow: 
+        0 0 10px var(--theme-color), 
+        0 0 20px var(--theme-color) !important;
+    }
+    /* Separate rule for SVGs since they use filter instead of text-shadow */
+    .magic-border:hover svg.glow-target {
+      filter: drop-shadow(0 0 8px var(--theme-color));
+      color: #ffffff !important;
+    }
+  </style>
 </head>
-<body>
+<body class="font-sans antialiased bg-deep text-slate-300 leading-relaxed selection:bg-cyan-400 selection:text-deep relative">
 
-    <canvas id="bgCanvas"></canvas>
-    <div class="bg-grid-overlay"></div>
+  <!-- Fixed Global Background -->
+  <div class="fixed inset-0 z-[-1] overflow-hidden bg-deep pointer-events-none">
+    <div class="absolute w-[45vw] h-[45vw] rounded-full bg-cyan-900/30 blur-[100px] animate-blob top-[-10%] left-[-10%] mix-blend-screen"></div>
+    <div class="absolute w-[40vw] h-[40vw] rounded-full bg-purple-900/30 blur-[100px] animate-blob-reverse top-[20%] right-[-10%] mix-blend-screen"></div>
+    <div class="absolute w-[50vw] h-[50vw] rounded-full bg-blue-900/20 blur-[120px] animate-blob bottom-[-20%] left-[20%] mix-blend-screen"></div>
+  </div>
 
-    <div class="top-nav">
-        <button id="theme-toggle">☀️ LIGHT MODE</button>
+  <!-- Right-Side Scroll Indicator (Dots) -->
+  <div class="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-50">
+    <a href="#hero" class="nav-indicator w-2 h-8 rounded-full bg-cyan-400 transition-all duration-300 shadow-[0_0_10px_rgba(0,229,255,0.8)]" data-target="hero"></a>
+    <a href="#projects" class="nav-indicator w-2 h-2 rounded-full bg-white/20 hover:bg-violet-400 transition-all duration-300" data-target="projects"></a>
+    <a href="#skills" class="nav-indicator w-2 h-2 rounded-full bg-white/20 hover:bg-emerald-400 transition-all duration-300" data-target="skills"></a>
+    <a href="#experience" class="nav-indicator w-2 h-2 rounded-full bg-white/20 hover:bg-amber-400 transition-all duration-300" data-target="experience"></a>
+    <a href="#contact" class="nav-indicator w-2 h-2 rounded-full bg-white/20 hover:bg-rose-400 transition-all duration-300" data-target="contact"></a>
+  </div>
+
+  <!-- Fixed Navigation Bar -->
+  <nav class="fixed w-full top-0 z-50 glass-panel border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex justify-between items-center">
+        <!-- Brand -->
+        <a href="#" class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+          <span class="text-cyan-400 font-mono">&lt;/&gt;</span> Sanskar Jaiswal
+        </a>
+
+        <!-- Desktop Menu -->
+        <div class="hidden md:flex items-center space-x-8 font-mono text-sm">
+          <a href="#projects" class="hover:text-violet-400 transition-colors">Projects</a>
+          <a href="#skills" class="hover:text-emerald-400 transition-colors">Skills</a>
+          <a href="#experience" class="hover:text-amber-400 transition-colors">Experience</a>
+          <a href="#contact" class="hover:text-rose-400 transition-colors">Contact</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header id="hero" class="min-h-screen w-full flex flex-col justify-center snap-start snap-always relative overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <img 
+        src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop" 
+        alt="Sci-Fi Abstract Background" 
+        class="absolute inset-0 w-full h-full object-cover opacity-30 animate-slow-pan"
+        style="-webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%); mask-image: linear-gradient(to bottom, black 50%, transparent 100%);"
+      >
+      <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-deep to-transparent"></div>
     </div>
 
-    <div class="main-wrapper">
-        <div class="glass-panel identity-col">
-            <div class="avatar-container">
-                <img src="https://lh3.googleusercontent.com/a/ACg8ocKFA-dP9EbnH6eCuI2aiwCqBVqNmlQ_XFYmZFeR1BtWAtrrW3U=s576-c-no" alt="Sanskar Jaiswal" class="profile-pic">
-            </div>
-            
-            <h1 class="name">Sanskar<br>Jaiswal</h1>
-            <div class="title">Dev // Creator</div>
-            
-            <div class="bio">
-                Building immersive digital experiences. Specializing in high-performance backends, game logic architectures, and scalable web infrastructure.
-            </div>
+    <div class="relative z-10 text-center px-6 max-w-4xl mx-auto flex flex-col items-center">
+      <div class="flex flex-col items-center mb-6 drop-shadow-lg">
+        <h1 class="text-6xl md:text-7xl lg:text-8xl font-bold text-white tracking-tighter leading-none mb-2">Software.</h1>
+        <h1 class="text-6xl md:text-7xl lg:text-8xl font-bold tracking-tighter leading-none bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">Engineer.</h1>
+      </div>
+      <p class="text-lg md:text-xl text-slate-400 mb-10 max-w-2xl font-medium">
+        Computer Science Engineering student building immersive digital experiences. Specializing in high-performance backends, game engine architectures, and scalable web infrastructure.
+      </p>
+      
+      <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto cursor-pointer">
+        <a href="#projects" class="magic-border px-8 py-3 rounded border border-cyan-400/50 bg-cyan-400/10 transition-all text-center group" style="--theme-color: #00E5FF;">
+          <span class="glow-target text-cyan-400 font-mono text-sm block">View Projects</span>
+        </a>
+        <a href="https://github.com/ROYALKINGSJ" target="_blank" class="magic-border px-8 py-3 rounded border border-white/10 bg-white/5 transition-all text-center flex items-center justify-center gap-2 group" style="--theme-color: #00E5FF;">
+          <svg class="glow-target text-white" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+          <span class="glow-target text-white font-mono text-sm block">GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
 
-            <div class="comms-grid" id="comms-container"></div>
+  <!-- Projects Section -->
+  <section id="projects" class="min-h-screen w-full flex flex-col justify-center snap-start snap-always px-6 pt-20 pb-10">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="flex items-center gap-4 mb-12">
+        <h2 class="text-3xl font-bold text-white">Projects</h2>
+        <div class="h-[1px] bg-violet-400/20 flex-1"></div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <div class="magic-border glass-panel p-8 rounded-xl transition-transform duration-300 group hover:-translate-y-1 cursor-pointer" style="--theme-color: #9D4EDD;">
+          <div class="flex justify-between items-start mb-4">
+            <svg class="glow-target text-violet-400" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h20"/><path d="M12 2v20"/><path d="m4.93 4.93 14.14 14.14"/><path d="m19.07 4.93-14.14 14.14"/></svg>
+            <a href="#" target="_blank" class="glow-target text-slate-500 z-20"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+          </div>
+          <h3 class="glow-target text-xl font-bold text-white mb-3">Unity Game Dev</h3>
+          <p class="glow-target text-slate-400 text-sm mb-6 relative z-10">Developing smooth player movement scripts and resolving complex physics jittering in 3D environments.</p>
+          <div class="flex items-center gap-2 mt-auto">
+            <span class="h-2 w-2 rounded-full bg-violet-400 shadow-[0_0_10px_rgba(157,78,221,0.8)]"></span>
+            <span class="glow-target text-xs font-mono text-violet-400 tracking-wider">GAME ENGINE</span>
+          </div>
         </div>
 
-        <div class="content-col">
-            <div class="glass-panel">
-                <div class="section-header">Systems & Matrix</div>
-                <div class="skills-container" id="skills-container"></div>
-            </div>
-
-            <div class="glass-panel" style="flex-grow: 1;">
-                <div class="section-header">Active Deployments</div>
-                <div class="projects-grid" id="projects-container"></div>
-            </div>
+        <div class="magic-border glass-panel p-8 rounded-xl transition-transform duration-300 group hover:-translate-y-1 cursor-pointer" style="--theme-color: #9D4EDD;">
+          <div class="flex justify-between items-start mb-4">
+            <svg class="glow-target text-violet-400" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg>
+            <!-- Direct link to repo -->
+            <a href="https://github.com/ROYALKINGSJ/mit-attendance-calculator" target="_blank" class="glow-target text-slate-500 z-20"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+          </div>
+          <h3 class="glow-target text-xl font-bold text-white mb-3">MIT Attendance Hub</h3>
+          <p class="glow-target text-slate-400 text-sm mb-6 relative z-10">Full-stack portal featuring secure user auth, API key management, and automated CSV data handling.</p>
+          <div class="flex items-center gap-2 mt-auto relative z-10">
+            <span class="h-2 w-2 rounded-full bg-violet-400 shadow-[0_0_10px_rgba(157,78,221,0.8)]"></span>
+            <span class="glow-target text-xs font-mono text-violet-400 tracking-wider">LIVE WEB APP</span>
+          </div>
         </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Skills Section -->
+  <section id="skills" class="min-h-screen w-full flex flex-col justify-center snap-start snap-always px-6 pt-20 pb-10">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="flex items-center gap-4 mb-12">
+        <h2 class="text-3xl font-bold text-white">Skills & Tech Stack</h2>
+        <div class="h-[1px] bg-emerald-400/20 flex-1"></div>
+      </div>
+      <div class="flex flex-wrap gap-4">
+        <div class="magic-border px-5 py-2.5 rounded border border-white/5 bg-surface cursor-pointer" style="--theme-color: #34D399;">
+          <span class="glow-target font-mono text-sm text-slate-300">C#</span>
+        </div>
+        <div class="magic-border px-5 py-2.5 rounded border border-emerald-400/40 bg-emerald-400/10 shadow-[0_0_15px_rgba(52,211,153,0.15)] cursor-pointer" style="--theme-color: #34D399;">
+          <span class="glow-target font-mono text-sm text-white">Python [Pandas, Numpy, Matplotlib, Seaborn]</span>
+        </div>
+        <div class="magic-border px-5 py-2.5 rounded border border-white/5 bg-surface cursor-pointer" style="--theme-color: #34D399;">
+          <span class="glow-target font-mono text-sm text-slate-300">Java OOP</span>
+        </div>
+        <div class="magic-border px-5 py-2.5 rounded border border-white/5 bg-surface cursor-pointer" style="--theme-color: #34D399;">
+          <span class="glow-target font-mono text-sm text-slate-300">C / C++</span>
+        </div>
+        <div class="magic-border px-5 py-2.5 rounded border border-white/5 bg-surface cursor-pointer" style="--theme-color: #34D399;">
+          <span class="glow-target font-mono text-sm text-slate-300">SQL Database Management</span>
+        </div>
+        <div class="magic-border px-5 py-2.5 rounded border border-white/5 bg-surface cursor-pointer" style="--theme-color: #34D399;">
+          <span class="glow-target font-mono text-sm text-slate-300">3D Modeling & Rendering</span>
+        </div>
+        <div class="magic-border px-5 py-2.5 rounded border border-white/5 bg-surface cursor-pointer" style="--theme-color: #34D399;">
+          <span class="glow-target font-mono text-sm text-slate-300">Git / Github</span>
+        </div>
+        <div class="magic-border px-5 py-2.5 rounded border border-white/5 bg-surface cursor-pointer" style="--theme-color: #34D399;">
+          <span class="glow-target font-mono text-sm text-slate-300">Affinity (Vector & Pixel Editing)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Experience Section -->
+  <section id="experience" class="min-h-screen w-full flex flex-col justify-center snap-start snap-always px-6 pt-20 pb-10">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="flex items-center gap-4 mb-12">
+        <h2 class="text-3xl font-bold text-white">Work Experience</h2>
+        <div class="h-[1px] bg-amber-400/20 flex-1"></div>
+      </div>
+      <div class="max-w-3xl border-l border-white/10 pl-6 space-y-12">
+        
+        <div class="magic-border rounded-xl p-6 bg-surface border border-white/5 group transition-transform hover:-translate-y-1 relative cursor-pointer" style="--theme-color: #FBBF24;">
+          <div class="absolute -left-[35px] top-7 h-4 w-4 rounded-full bg-deep border-2 border-amber-400 group-hover:shadow-[0_0_10px_rgba(251,191,36,0.6)] transition-shadow"></div>
+          <h3 class="glow-target text-xl font-bold text-white mb-1">Full-Stack Developer</h3>
+          <p class="glow-target text-amber-400 font-mono text-sm mb-4 relative z-10">Freelance / Independent <span class="text-slate-500">| 2022 - Present</span></p>
+          <ul class="glow-target text-slate-400 text-sm space-y-3 list-disc list-inside marker:text-amber-400/50 relative z-10">
+            <li>Designed and developed scalable web applications utilizing React, Node.js, and SQL.</li>
+            <li>Architected secure API hubs with integrated authentication and CSV data handling.</li>
+            <li>Optimized database queries decreasing load times by up to 30%.</li>
+          </ul>
+        </div>
+
+        <div class="magic-border rounded-xl p-6 bg-surface border border-white/5 group transition-transform hover:-translate-y-1 relative cursor-pointer" style="--theme-color: #FBBF24;">
+          <div class="absolute -left-[35px] top-7 h-4 w-4 rounded-full bg-deep border-2 border-white/20 group-hover:border-amber-400 transition-colors"></div>
+          <h3 class="glow-target text-xl font-bold text-white mb-1">Unity Engine Developer</h3>
+          <p class="glow-target text-amber-400/70 font-mono text-sm mb-4 relative z-10">Personal Projects <span class="text-slate-500">| 2021 - Present</span></p>
+          <ul class="glow-target text-slate-400 text-sm space-y-3 list-disc list-inside marker:text-amber-400/30 relative z-10">
+            <li>Programmed advanced C# logic for smooth 3D character controllers.</li>
+            <li>Resolved complex Unity physics jitter and implemented custom rendering pipelines.</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="min-h-screen w-full flex flex-col snap-start snap-always relative">
+    <div class="flex-1 flex flex-col justify-center items-center px-6 w-full max-w-6xl mx-auto text-center">
+      <p class="text-rose-400 font-mono mb-4 text-sm tracking-widest uppercase">What's Next?</p>
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Get In Touch</h2>
+      <p class="text-slate-400 mb-10 max-w-2xl mx-auto">
+        I'm currently looking for new opportunities. Whether you have a question, a project in mind, or just want to say hi, I'll try my best to get back to you!
+      </p>
+      <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+        
+        <a href="mailto:your-email@example.com" class="magic-border px-8 py-4 rounded border border-rose-400/50 bg-rose-400/10 transition-all w-full sm:w-auto" style="--theme-color: #FB7185;">
+          <span class="glow-target text-rose-400 font-mono block">Send an Email</span>
+        </a>
+        
+        <a href="https://linkedin.com/in/sanskar-jaiswal" target="_blank" class="magic-border px-8 py-4 rounded border border-white/10 bg-white/5 transition-all w-full sm:w-auto flex items-center justify-center gap-2" style="--theme-color: #FB7185;">
+          <svg class="glow-target text-white" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+          <span class="glow-target text-white font-mono block">LinkedIn</span>
+        </a>
+
+        <a href="https://patreon.com/TECHCOM" target="_blank" class="magic-border px-8 py-4 rounded border border-white/10 bg-white/5 transition-all w-full sm:w-auto flex items-center justify-center gap-2" style="--theme-color: #FF424D;">
+          <!-- Patreon SVG -->
+          <svg class="glow-target text-white" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M15.386.524c-4.764 0-8.64 3.876-8.64 8.64 0 4.75 3.876 8.613 8.64 8.613 4.75 0 8.614-3.864 8.614-8.613C24 4.4 20.136.524 15.386.524M.003 23.537h4.22V.524H.003v23.013z"/></svg>
+          <span class="glow-target text-white font-mono block">Patreon</span>
+        </a>
+
+      </div>
     </div>
 
-    <div class="led-wrapper">
-        <canvas id="ledCanvas"></canvas>
-    </div>
+    <!-- Footer -->
+    <footer class="w-full py-6 border-t border-white/5 text-center shrink-0">
+      <p class="text-slate-500 font-mono text-xs">
+        Designed & Built by Sanskar Jaiswal <br>
+        <span class="text-cyan-400/30">2026</span>
+      </p>
+    </footer>
+  </section>
 
-    <script src="script.js"></script>
+  <!-- JavaScript for Scroll Indication Logic -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const sections = document.querySelectorAll("header, section");
+      const navIndicators = document.querySelectorAll(".nav-indicator");
+
+      const themeColors = {
+        'hero': 'bg-cyan-400',
+        'projects': 'bg-violet-400',
+        'skills': 'bg-emerald-400',
+        'experience': 'bg-amber-400',
+        'contact': 'bg-rose-400'
+      };
+
+      const shadowColors = {
+        'hero': 'shadow-[0_0_10px_rgba(0,229,255,0.8)]',
+        'projects': 'shadow-[0_0_10px_rgba(157,78,221,0.8)]',
+        'skills': 'shadow-[0_0_10px_rgba(52,211,153,0.8)]',
+        'experience': 'shadow-[0_0_10px_rgba(251,191,36,0.8)]',
+        'contact': 'shadow-[0_0_10px_rgba(251,113,133,0.8)]'
+      };
+
+      // Intersection Observer to detect which section is currently active
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute("id");
+
+            navIndicators.forEach(indicator => {
+              const target = indicator.getAttribute("data-target");
+              
+              // Reset all dots to inactive state
+              indicator.className = `nav-indicator w-2 h-2 rounded-full bg-white/20 hover:bg-${themeColors[target].split('-')[1]}-400 transition-all duration-300`;
+
+              // Apply active state to the intersecting section's dot
+              if (target === id) {
+                indicator.className = `nav-indicator w-2 h-8 rounded-full ${themeColors[id]} transition-all duration-300 ${shadowColors[id]}`;
+              }
+            });
+          }
+        });
+      }, {
+        threshold: 0.5 // Trigger when 50% of the section is visible
+      });
+
+      sections.forEach(section => {
+        observer.observe(section);
+      });
+    });
+  </script>
 </body>
 </html>
