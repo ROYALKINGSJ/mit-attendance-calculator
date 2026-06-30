@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thumbnail Gallery | Sanskar Jaiswal</title>
+  
+  <link rel="icon" href="https://fav.farm/🎨" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+          colors: { deep: '#030305', cyan: { 400: '#00E5FF' }, violet: { 400: '#9D4EDD' } },
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #030305; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9D4EDD; }
+    
+    .glass-panel {
+      background: rgba(15, 15, 20, 0.6);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    /* Loading Spinner */
+    .loader {
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: #9D4EDD;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="font-sans antialiased bg-deep text-slate-300 min-h-screen relative">
+
+  <!-- Background Effects -->
+  <div class="fixed inset-0 z-[-1] overflow-hidden bg-deep pointer-events-none">
+    <div class="absolute w-[40vw] h-[40vw] rounded-full bg-purple-900/20 blur-[120px] top-[-10%] right-[-10%]"></div>
+    <div class="absolute w-[50vw] h-[50vw] rounded-full bg-cyan-900/10 blur-[120px] bottom-[-20%] left-[-10%]"></div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="sticky w-full top-0 z-50 glass-panel border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="portfolio.html" class="text-white flex items-center gap-2 hover:text-violet-400 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        <span class="font-mono text-sm">Back to Portfolio</span>
+      </a>
+      <h1 class="text-xl font-bold tracking-tight text-white hidden sm:block">
+        <span class="text-violet-400 font-mono">🎨</span> Design Gallery
+      </h1>
+    </div>
+  </nav>
+
+  <!-- Gallery Section -->
+  <main class="max-w-7xl mx-auto px-6 py-12">
+    <div class="mb-10 text-center">
+      <h2 class="text-4xl font-bold text-white mb-4">Thumbnail Designs</h2>
+      <p class="text-slate-400 max-w-2xl mx-auto">A live collection of my graphic design work. These images are fetched directly from my repository.</p>
+    </div>
+
+    <!-- Status / Loading -->
+    <div id="status" class="flex flex-col items-center justify-center py-20">
+      <div class="loader mb-4"></div>
+      <p class="text-violet-400 font-mono text-sm animate-pulse">Syncing with GitHub matrix...</p>
+    </div>
+
+    <!-- Masonry Grid Container -->
+    <div id="gallery-grid" class="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6 hidden">
+      <!-- Images will be injected here by JavaScript -->
+    </div>
+  </main>
+
+  <script>
+    // GitHub API Configuration
+    const repoOwner = 'ROYALKINGSJ';
+    const repoName = 'mit-attendance-calculator';
+    const folderPath = 'IMAGES'; // Exact folder name from your screenshot
+    
+    // The API endpoint to get folder contents
+    const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${folderPath}`;
+
+    async function loadImages() {
+      const statusDiv = document.getElementById('status');
+      const galleryGrid = document.getElementById('gallery-grid');
+
+      try {
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch from GitHub API. Check folder path or rate limits.');
+        }
+
+        const files = await response.json();
+        
+        // Filter for image files only
+        const imageFiles = files.filter(file => 
+          file.type === 'file' && file.name.match(/\.(jpe?g|png|webp|gif)$/i)
+        );
+
+        if (imageFiles.length === 0) {
+          statusDiv.innerHTML = `<p class="text-slate-400">No images found in the /IMAGES directory.</p>`;
+          return;
+        }
+
+        // Hide loading status, show grid
+        statusDiv.style.display = 'none';
+        galleryGrid.classList.remove('hidden');
+
+        // Generate HTML for each image
+        imageFiles.forEach(file => {
+          const card = document.createElement('div');
+          card.className = 'relative group break-inside-avoid rounded-xl overflow-hidden glass-panel border border-white/10';
+          
+          card.innerHTML = `
+            <img src="${file.download_url}" alt="${file.name}" class="w-full h-auto object-cover transform transition-transform duration-700 group-hover:scale-105" loading="lazy">
+            
+            <!-- Hover Overlay -->
+            <div class="absolute inset-0 bg-deep/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 backdrop-blur-sm p-4 text-center">
+              <p class="text-white font-mono text-xs mb-2 truncate w-full">${file.name}</p>
+              <div class="flex gap-3">
+                <a href="${file.download_url}" target="_blank" class="px-5 py-2 bg-violet-400/20 text-violet-400 border border-violet-400/50 rounded hover:bg-violet-400 hover:text-white transition-all font-mono text-sm flex items-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6"/><path d="M10 14L21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+                  View
+                </a>
+              </div>
+            </div>
+          `;
+          galleryGrid.appendChild(card);
+        });
+
+      } catch (error) {
+        console.error(error);
+        statusDiv.innerHTML = `
+          <div class="text-rose-400 text-center">
+            <p class="font-bold mb-2">Sync Error</p>
+            <p class="text-sm opacity-80">Could not load images. Make sure the 'IMAGES' folder exists and contains pictures.</p>
+          </div>
+        `;
+      }
+    }
+
+    // Initialize
+    loadImages();
+  </script>
+</body>
+</html>
